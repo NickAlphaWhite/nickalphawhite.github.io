@@ -171,6 +171,7 @@
   <script type="module">
 import * as THREE from 'three';
 import {buildHall} from './assets/hall.js';
+import {createLookControls} from './assets/look-controls.js';
 try {
 
 /* KAIHUA / A WALKABLE IMAGE
@@ -288,6 +289,7 @@ function setEntryCamera(){camera.position.set(0,1.7,4.72);state.yaw=0;state.pitc
 function setOrientation(){camera.rotation.order='YXZ';camera.rotation.y=state.yaw;camera.rotation.x=state.pitch;camera.rotation.z=0}
 function jumpToView(index){
  const v=viewpoints[index];if(!v||state.mode!=='explore'||state.drawer)return;
+ lookInput.reset();
  state.guide=false;state.guidePaused=false;state.keys.clear();state.touch.clear();
  camera.position.set(...v.position);camera.lookAt(...v.target);syncOrientationFromCamera();setOrientation();
  $('guide-label').textContent=content[state.lang].guide;
@@ -296,15 +298,29 @@ function jumpToView(index){
 // Camera local -Z is forward: camera.rotation.y and walking must use the same sign.
 const facing=new THREE.Vector3();
 function syncOrientationFromCamera(){camera.getWorldDirection(facing);state.yaw=Math.atan2(-facing.x,-facing.z);state.pitch=Math.asin(THREE.MathUtils.clamp(facing.y,-1,1));}
-function releaseMouse(){if(document.pointerLockElement===renderer.domElement)document.exitPointerLock?.();}
+const lookInput=createLookControls({
+ element:renderer.domElement,isEnabled:()=>state.mode==='explore'&&!state.drawer,isGuided:()=>state.guide,
+ onManualLook:cancelGuide,
+ onRotate:(yaw,pitch)=>{state.yaw+=yaw;state.pitch=THREE.MathUtils.clamp(state.pitch+pitch,-1.32,1.32)},
+ onInspect:inspectWall,onRequestLock:captureMouse
+});
+let lockPending=false;
+function releaseMouse(){lookInput.reset();if(document.pointerLockElement===renderer.domElement)document.exitPointerLock?.();}
 function updateMouseHint(){const hint=$('mouse-hint');if(hint)hint.hidden=state.mode!=='explore'||Boolean(state.drawer)||state.guide||document.pointerLockElement===renderer.domElement||matchMedia('(pointer:coarse)').matches;}
-function captureMouse(){if(state.mode!=='explore'||state.drawer||state.guide||matchMedia('(pointer:coarse)').matches)return;
-  if(document.pointerLockElement===renderer.domElement)return;
-  try{const lock=renderer.domElement.requestPointerLock?.();if(lock&&typeof lock.catch==='function')lock.catch(()=>updateMouseHint());}catch(e){updateMouseHint();}}
+function captureMouse(){
+ if(state.mode!=='explore'||state.drawer||state.guide||matchMedia('(pointer:coarse)').matches||lockPending||document.pointerLockElement===renderer.domElement)return;
+ lookInput.reset();
+ try{
+  lockPending=true;const result=renderer.domElement.requestPointerLock?.();
+  if(result&&typeof result.finally==='function')result.catch(()=>updateMouseHint()).finally(()=>lockPending=false);
+  else lockPending=false;
+ }catch(error){lockPending=false;updateMouseHint()}
+}
 function cancelGuide(){if(state.guide){state.guide=false;state.guidePaused=false;syncOrientationFromCamera();$('guide-label').textContent=content[state.lang].guide;updateMouseHint();}}
 setHomeCamera();
 function applyLang(){const t=content[state.lang];document.documentElement.lang=state.lang==='zh'?'zh-CN':'en';$('language').textContent=state.lang==='en'?'中文':'EN';['nav-home','nav-explore','nav-atlas','nav-method'].forEach((id,i)=>$(id).textContent=t.nav[i]);$('hero-kicker').textContent=t.kicker;$('hero-heading').innerHTML=t.hero;$('hero-subtitle').textContent=t.sub;$('hero-copy').textContent=t.copy;$('enter-label').textContent=t.enter;$('hero-archive').innerHTML=`${t.archive} <span>↗</span>`;$('hero-caption').textContent=t.caption;$('tour-title').textContent=t.tourTitle;$('tour-subtitle').textContent=t.tourSub;$('controls-text').textContent=t.controls;$('guide-label').textContent=state.guide?(state.guidePaused?t.resume:t.pause):t.guide;$('reset-label').textContent=t.reset;$('exit-label').textContent=t.exit;$('plan-label').textContent=t.plan;$('plan-note').textContent=t.planNote;$('look-hint').textContent=t.look;$('mouse-hint').textContent=state.lang==='en'?'Click the hall to resume mouse look · Esc unlocks':'点击大殿继续鼠标转向 · Esc 释放鼠标';$('footnote').textContent=t.foot;if($('loading-text'))$('loading-text').textContent=t.loading;showPositionInfo();if(!$('overlay').hidden){$('close-label').textContent=state.mode==='explore'?t.returnHall:t.returnIntro;renderDrawer();}}
 function clearDrawer(){
+ lookInput.reset();
  const el=$('overlay');el.hidden=true;document.querySelectorAll('.navlink').forEach(b=>b.classList.toggle('active',b.dataset.nav===state.mode));state.drawer=null;state.keys.clear();state.touch.clear();
  updateMouseHint();
  // The camera is deliberately not reset: visitors return to exactly where they stood.
@@ -392,7 +408,7 @@ function allowed(x,z){
  if(x < -5.25 || x > 5.25 || z < -5.05 || z > 4.95)return false;
  return !obstacles.some(o=>Math.abs(x-o.x)<o.halfX+radius&&Math.abs(z-o.z)<o.halfZ+radius);
 }
-function move(dt){let f=0,r=0;if(state.keys.has('KeyW')||state.keys.has('ArrowUp')||state.touch.has('forward'))f+=1;if(state.keys.has('KeyS')||state.keys.has('ArrowDown')||state.touch.has('back'))f-=1;if(state.keys.has('KeyA')||state.touch.has('left'))r-=1;if(state.keys.has('KeyD')||state.touch.has('right'))r+=1;if(state.keys.has('ArrowLeft'))state.yaw+=dt*1.24;if(state.keys.has('ArrowRight'))state.yaw-=dt*1.24;if(f||r){let l=Math.hypot(f,r);f/=l;r/=l;let s=Math.min(dt,.07)*2.65;const dx=(-Math.sin(state.yaw)*f+Math.cos(state.yaw)*r)*s;const dz=(-Math.cos(state.yaw)*f-Math.sin(state.yaw)*r)*s;let p=camera.position;if(allowed(p.x+dx,p.z))p.x+=dx;if(allowed(p.x,p.z+dz))p.z+=dz;}setOrientation();}
+function move(dt){dt=Number.isFinite(dt)?THREE.MathUtils.clamp(dt,0,.05):0;lookInput.update(dt);let f=0,r=0;if(state.keys.has('KeyW')||state.keys.has('ArrowUp')||state.touch.has('forward'))f+=1;if(state.keys.has('KeyS')||state.keys.has('ArrowDown')||state.touch.has('back'))f-=1;if(state.keys.has('KeyA')||state.touch.has('left'))r-=1;if(state.keys.has('KeyD')||state.touch.has('right'))r+=1;if(state.keys.has('ArrowLeft'))state.yaw+=dt*1.24;if(state.keys.has('ArrowRight'))state.yaw-=dt*1.24;if(f||r){let l=Math.hypot(f,r);f/=l;r/=l;let s=Math.min(dt,.07)*2.65;const dx=(-Math.sin(state.yaw)*f+Math.cos(state.yaw)*r)*s;const dz=(-Math.cos(state.yaw)*f-Math.sin(state.yaw)*r)*s;let p=camera.position;if(allowed(p.x+dx,p.z))p.x+=dx;if(allowed(p.x,p.z+dz))p.z+=dz;}setOrientation();}
 function updateGuided(dt){
  if(!state.guide||state.guidePaused)return;
  state.guideT+=Math.min(dt,.06)/52;
@@ -462,7 +478,7 @@ function bind(){
   $('close-overlay').onclick=clearDrawer;
   $('close-backdrop').onclick=clearDrawer;
   $('exit-tour').onclick=()=>setMode('home');
-  $('reset-view').onclick=()=>{state.guide=false;state.guidePaused=false;state.keys.clear();state.touch.clear();setEntryCamera();updateMouseHint();$('guide-label').textContent=content[state.lang].guide};
+  $('reset-view').onclick=()=>{lookInput.reset();state.guide=false;state.guidePaused=false;state.keys.clear();state.touch.clear();setEntryCamera();updateMouseHint();$('guide-label').textContent=content[state.lang].guide};
   $('look-label').onclick=()=>inspectWall();
   $('fullscreen').onclick=()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()};
   $('fallback-atlas').onclick=e=>{e.preventDefault();setDrawer('atlas')};
@@ -482,42 +498,8 @@ function bind(){
   });
   window.addEventListener('keyup',e=>state.keys.delete(e.code));
   window.addEventListener('blur',()=>{state.keys.clear();state.touch.clear()});
+  document.addEventListener('visibilitychange',()=>{state.keys.clear();state.touch.clear()});
   document.addEventListener('pointerlockchange',()=>{state.keys.clear();updateMouseHint()});
-  document.addEventListener('mousemove',e=>{
-    if(document.pointerLockElement!==renderer.domElement||state.mode!=='explore'||state.drawer)return;
-    cancelGuide();state.yaw-=e.movementX*.0022;
-    state.pitch=THREE.MathUtils.clamp(state.pitch-e.movementY*.0022,-1.32,1.32);
-  });
-  // Touch devices (and browsers without Pointer Lock) keep drag-to-look as a fallback.
-  let px=0,py=0,activePointer=null,suppressClick=false;
-  renderer.domElement.addEventListener('pointerdown',e=>{
-    if(state.mode!=='explore'||state.drawer)return;
-    if(document.pointerLockElement===renderer.domElement)return;
-    if(e.button!==0)return;
-    if(activePointer!==null)return;
-    activePointer=e.pointerId;state.mouseDown=true;state.dragged=false;suppressClick=false;px=e.clientX;py=e.clientY;
-    renderer.domElement.setPointerCapture?.(e.pointerId);
-  });
-  renderer.domElement.addEventListener('pointermove',e=>{
-    if(state.mode!=='explore'||state.drawer||document.pointerLockElement===renderer.domElement||!state.mouseDown||e.pointerId!==activePointer)return;
-    const dx=e.clientX-px,dy=e.clientY-py;
-    if(Math.abs(dx)+Math.abs(dy)>2)state.dragged=true;
-    cancelGuide();state.yaw-=dx*.0045;state.pitch=THREE.MathUtils.clamp(state.pitch-dy*.0038,-1.32,1.32);
-    px=e.clientX;py=e.clientY;
-  });
-  renderer.domElement.addEventListener('pointerup',e=>{
-    if(e.pointerId!==activePointer)return;
-    suppressClick=state.dragged;state.mouseDown=false;activePointer=null;
-  });
-  for(const event of ['pointercancel','lostpointercapture'])renderer.domElement.addEventListener(event,e=>{
-    if(e.pointerId===activePointer){state.mouseDown=false;activePointer=null;suppressClick=true;}
-  });
-  renderer.domElement.addEventListener('click',e=>{
-    if(suppressClick){suppressClick=false;return;}
-    if(state.mode!=='explore'||state.drawer)return;
-    if(inspectWall(e.clientX,e.clientY))return;
-    if(e.pointerType!=='touch')captureMouse();
-  });
   for(const btn of document.querySelectorAll('[data-move]')){
     const dir=btn.dataset.move;
     btn.addEventListener('pointerdown',e=>{e.preventDefault();btn.setPointerCapture(e.pointerId);cancelGuide();state.touch.add(dir)});
