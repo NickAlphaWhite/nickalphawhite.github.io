@@ -344,10 +344,66 @@ function setDrawer(view,wall=state.activeWall){
  renderDrawer();updateMouseHint();
  document.querySelectorAll('.navlink').forEach(b=>b.classList.toggle('active',b.dataset.nav===view));
 }
-function renderDrawer(){const t=content[state.lang],body=$('drawer-body');if(state.drawer==='atlas'){const i=state.activeWall,w=WALLS[i],a=state.assets[w.key]||{};const hasBoth=Boolean(a.original&&a.restored&&state.available[w.key]?.original&&state.available[w.key]?.restored);
-  body.innerHTML=`<span class="sublabel">AN ATLAS OF RELATIONSHIPS / 02</span><h2 id="drawer-heading">${t.archiveTitle}</h2><p class="intro">${t.archiveIntro}</p><div class="wall-tabs">${t.wallNames.map((v,j)=>`<button type="button" class="${j===i?'active':''}" data-wall="${j}">${v}</button>`).join('')}</div><article class="wall-card"><h3>${t.wallNames[i]}</h3><span class="wall-scripture">${t.themes[i]}</span><p>${t.wallNotes[i]}</p><div class="evidence-box"><p>${t.wallLocation}</p><span class="status-tag">${t.assetTag}</span></div><div class="comparison-head"><span>${t.comparison}</span><span>${hasBoth?'01 — 02':'SOURCE STATUS / 00'}</span></div><div class="compare-view" id="compare-view">${hasBoth?`<img src="${safeUrl(a.original)}" alt="original mural scan"><img id="compare-restored" src="${safeUrl(a.restored)}" alt="digitally restored mural"><span class="compare-line" id="compare-line"></span>`:`<div class="missing"><strong>${t.noImages}</strong><small>${t.noImagesHint}</small></div>`}</div>${hasBoth?`<input class="compare-range" id="compare-range" type="range" min="0" max="100" value="50" aria-label="Before and after reveal slider"><div class="compare-legend"><span>${t.original}</span><span>${t.restored}</span></div>`:''}<button class="visit-wall" id="visit-wall">${t.wallWalk}<span>↗</span></button></article>`;
-  body.querySelectorAll('[data-wall]').forEach(el=>el.onclick=()=>setDrawer('atlas',Number(el.dataset.wall)));const range=$('compare-range');if(range)range.oninput=()=>{const val=Number(range.value);$('compare-restored').style.clipPath=`inset(0 ${100-val}% 0 0)`;$('compare-line').style.left=`${val}%`};$('visit-wall').onclick=()=>{setMode('explore');camera.position.set(...w.target);const dir=new THREE.Vector3(w.x,w.y,w.z).sub(camera.position);state.yaw=Math.atan2(-dir.x,-dir.z);state.pitch=Math.atan2(dir.y,Math.hypot(dir.x,dir.z));setOrientation();captureMouse()};
-}else{body.innerHTML=`<span class="sublabel">METHOD & DOCUMENTATION / 03</span><h2 id="drawer-heading">${t.methodTitle}</h2><p class="method-lead">${t.methodIntro}</p>${t.methods.map((m,i)=>`<div class="method-entry"><div class="num">0${i+1}</div><div><h3>${m[0]}</h3><p>${m[1]}</p></div></div>`).join('')}<div class="method-entry"><div class="num">—</div><div><h3>${t.evidenceTitle}</h3><p>${t.sourcesIntro}</p><ul class="citation-list">${sources.map((u,i)=>`<li><a href="${u}" target="_blank" rel="noopener noreferrer">${t.refs[i]} ↗</a></li>`).join('')}</ul></div></div>`;}}
+function renderDrawer(){
+ const t=content[state.lang],body=$('drawer-body');
+ if(state.drawer==='atlas'){
+  const i=state.activeWall,w=WALLS[i],a=state.assets[w.key]||{};
+  const hasBoth=Boolean(a.original&&a.restored&&state.available[w.key]?.original&&state.available[w.key]?.restored);
+  const picture=hasBoth
+   ? `<img src="${safeUrl(a.original)}" alt="${t.original}"><img id="compare-restored" src="${safeUrl(a.restored)}" alt="${t.restored}"><span class="compare-line" id="compare-line"></span>`
+   : `<div class="missing"><strong>${t.noImages}</strong><small>${t.noImagesHint}</small></div>`;
+  body.innerHTML=`
+   <div class="archive-page">
+    <span class="sublabel">KAIHUA / WALL ${String(i+1).padStart(2,'0')} — 04</span>
+    <h2 id="drawer-heading" class="archive-title">${t.wallNames[i]}</h2>
+    <p class="archive-intro">${t.archiveIntro}</p>
+    <div class="wall-tabs" role="group" aria-label="${t.archiveTitle}">
+      ${t.wallNames.map((v,j)=>`<button type="button" class="${j===i?'active':''}" aria-pressed="${j===i}" data-wall="${j}">${v}</button>`).join('')}
+    </div>
+    <article class="wall-detail-grid">
+     <div class="wall-artwork">
+      <div class="comparison-head"><span>${t.comparison}</span><span>${hasBoth?'01 — 02':'SOURCE STATUS / 00'}</span></div>
+      <div class="compare-view" id="compare-view">${picture}</div>
+      ${hasBoth?`<input class="compare-range" id="compare-range" type="range" min="0" max="100" value="50" aria-label="Original and restoration comparison"><div class="compare-legend"><span>${t.original}</span><span>${t.restored}</span></div>`:''}
+     </div>
+     <div class="wall-detail-info">
+      <span class="sublabel">${t.wallNames[i]}</span>
+      <h3>${t.wallNames[i]}</h3>
+      <span class="wall-scripture">${t.themes[i]}</span>
+      <p>${t.wallNotes[i]}</p>
+      <div class="evidence-box"><p>${t.wallLocation}</p><span class="status-tag">${t.assetTag}</span></div>
+      <button class="visit-wall" id="visit-wall">${t.wallWalk}<span aria-hidden="true">↗</span></button>
+     </div>
+    </article>
+   </div>`;
+  body.querySelectorAll('[data-wall]').forEach(el=>el.onclick=()=>setDrawer('atlas',Number(el.dataset.wall)));
+  const range=$('compare-range');
+  if(range)range.oninput=()=>{
+   const val=Number(range.value);
+   $('compare-restored').style.clipPath=`inset(0 ${100-val}% 0 0)`;
+   $('compare-line').style.left=`${val}%`;
+  };
+  $('visit-wall').onclick=()=>{
+   setMode('explore');
+   camera.position.set(...w.target);
+   const dir=new THREE.Vector3(w.x,w.y,w.z).sub(camera.position);
+   state.yaw=Math.atan2(-dir.x,-dir.z);
+   state.pitch=Math.atan2(dir.y,Math.hypot(dir.x,dir.z));
+   setOrientation();updateMap();updateMouseHint();
+   captureMouse();
+  };
+ }else{
+  body.innerHTML=`<div class="method-page">
+    <span class="sublabel">METHOD & DOCUMENTATION / 03</span>
+    <h2 id="drawer-heading" class="archive-title">${t.methodTitle}</h2>
+    <p class="method-lead">${t.methodIntro}</p>
+    ${t.methods.map((m,i)=>`<div class="method-entry"><div class="num">0${i+1}</div><div><h3>${m[0]}</h3><p>${m[1]}</p></div></div>`).join('')}
+    <div class="method-entry"><div class="num">—</div><div><h3>${t.evidenceTitle}</h3><p>${t.sourcesIntro}</p>
+      <ul class="citation-list">${sources.map((u,i)=>`<li><a href="${u}" target="_blank" rel="noopener noreferrer">${t.refs[i]} ↗</a></li>`).join('')}</ul>
+    </div>
+   </div>`;
+ }
+}
 function safeUrl(s){return typeof s==='string'&&/^\.\/assets\/murals\/[a-zA-Z0-9_./-]+\.(jpg|jpeg|png|webp)$/.test(s)?s:''}
 function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('visible');clearTimeout(toast.timeout);toast.timeout=setTimeout(()=>el.classList.remove('visible'),2600)}
 function showPositionInfo(){const t=content[state.lang];let x=camera.position.x,z=camera.position.z;let step=z<-2.8?2:x<-2.7?1:x>2.7?3:0;const [where,head,description]=t.steps[step];$('current-location').textContent=where;$('current-step').textContent=head;$('step-description').textContent=description;$('tour-progress-fill').style.width=`${(step+1)*25}%`;}
