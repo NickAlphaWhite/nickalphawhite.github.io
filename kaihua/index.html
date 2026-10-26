@@ -197,6 +197,7 @@ renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;$
 const hemi=new THREE.HemisphereLight(0xbcc6ad,0x4e4433,1.5);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xe8c69a,2.1);sun.position.set(2,7,7);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-12;sun.shadow.camera.right=12;sun.shadow.camera.top=12;sun.shadow.camera.bottom=-12;sun.shadow.bias=-.001;scene.add(sun);
 const glow=new THREE.PointLight(0xf2cb86,25,12,2);glow.position.set(0,3.7,3.2);scene.add(glow);
+const occluders=[]; // Only pillars and altar volumes interrupt the sightline
 const stone=new THREE.MeshStandardMaterial({color:0x817a65,roughness:1});
 const timber=new THREE.MeshStandardMaterial({color:0x403124,roughness:.89});
 const timberTrim=new THREE.MeshStandardMaterial({color:0x6d4c30,roughness:.92});
@@ -221,8 +222,8 @@ for(const x of [-5.55,-3.6,-1.1,1.1,3.6,5.55])block(x,5.42,0,.24,.22,11.55,timbe
 block(0,5.66,0,12,.24,11.6,timber,false);
 // Six columns: four immediately around the altar and two at the south side bays.
 const columnCenters=[[-2.72,-2.60],[2.72,-2.60],[-2.72,2.45],[2.72,2.45],[-5.20,4.8],[5.20,4.8]];
-for(let i=0;i<columnCenters.length;i++){let [x,z]=columnCenters[i];const geometry=(i===0||i===1)?new THREE.CylinderGeometry(.25,.29,4.7,16):new THREE.CylinderGeometry(.27,.30,4.7,8);const col=new THREE.Mesh(geometry,timber);col.position.set(x,2.35,z);col.castShadow=true;col.receiveShadow=true;scene.add(col);block(x,4.78,z,.72,.21,.72,timberTrim);block(x,.15,z,.54,.29,.54,stone)}
-block(0,.42,-.1,4.54,.84,4.00,stone);block(0,.88,-.1,4.1,.09,3.62,plasterDark);block(0,1.16,-.27,3.4,.48,3.02,new THREE.MeshStandardMaterial({color:0x524738,roughness:1}));
+for(let i=0;i<columnCenters.length;i++){let [x,z]=columnCenters[i];const geometry=(i===0||i===1)?new THREE.CylinderGeometry(.25,.29,4.7,16):new THREE.CylinderGeometry(.27,.30,4.7,8);const col=new THREE.Mesh(geometry,timber);col.position.set(x,2.35,z);col.castShadow=true;col.receiveShadow=true;scene.add(col);occluders.push(col);block(x,4.78,z,.72,.21,.72,timberTrim);block(x,.15,z,.54,.29,.54,stone)}
+occluders.push(block(0,.42,-.1,4.54,.84,4.00,stone));occluders.push(block(0,.88,-.1,4.1,.09,3.62,plasterDark));occluders.push(block(0,1.16,-.27,3.4,.48,3.02,new THREE.MeshStandardMaterial({color:0x524738,roughness:1})));
 for(const x of [-1.0,0,1.0]){block(x,1.47,-.6,.57,.20,.80,timberTrim)}
 // A restrained abstract altar volume; not a claim about historical sculpture shapes.
 // No decorative wireframe edges around altar.
@@ -285,10 +286,18 @@ function renderDrawer(){const t=content[state.lang],body=$('drawer-body');if(sta
 }else{body.innerHTML=`<span class="sublabel">METHOD & DOCUMENTATION / 03</span><h2 id="drawer-heading">${t.methodTitle}</h2><p class="method-lead">${t.methodIntro}</p>${t.methods.map((m,i)=>`<div class="method-entry"><div class="num">0${i+1}</div><div><h3>${m[0]}</h3><p>${m[1]}</p></div></div>`).join('')}<div class="method-entry"><div class="num">—</div><div><h3>${t.evidenceTitle}</h3><p>${t.sourcesIntro}</p><ul class="citation-list">${sources.map((u,i)=>`<li><a href="${u}" target="_blank" rel="noopener noreferrer">${t.refs[i]} ↗</a></li>`).join('')}</ul></div></div>`;}}
 function safeUrl(s){return typeof s==='string'&&/^\.\/assets\/murals\/[a-zA-Z0-9_./-]+\.(jpg|jpeg|png|webp)$/.test(s)?s:''}
 function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('visible');clearTimeout(toast.timeout);toast.timeout=setTimeout(()=>el.classList.remove('visible'),2600)}
-function showPositionInfo(){const t=content[state.lang];let x=camera.position.x,z=camera.position.z;let step=x<-2.7?1:x>2.7?3:z<-2.8?2:0;const [where,head,description]=t.steps[step];$('current-location').textContent=where;$('current-step').textContent=head;$('step-description').textContent=description;$('tour-progress-fill').style.width=`${(step+1)*25}%`;}
+function showPositionInfo(){const t=content[state.lang];let x=camera.position.x,z=camera.position.z;let step=z<-2.8?2:x<-2.7?1:x>2.7?3:0;const [where,head,description]=t.steps[step];$('current-location').textContent=where;$('current-step').textContent=head;$('step-description').textContent=description;$('tour-progress-fill').style.width=`${(step+1)*25}%`;}
 function allowed(x,z){const r=.28;if(x<-4.6||x>4.6||z<-4.45||z>4.95)return false;if(Math.abs(x)<2.55&&z>-2.50&&z<2.35)return false;for(const [px,pz] of columnCenters)if(Math.hypot(x-px,z-pz)<.47)return false;return true;}
 function move(dt){let f=0,r=0;if(state.keys.has('KeyW')||state.keys.has('ArrowUp')||state.touch.has('forward'))f+=1;if(state.keys.has('KeyS')||state.keys.has('ArrowDown')||state.touch.has('back'))f-=1;if(state.keys.has('KeyA')||state.touch.has('left'))r-=1;if(state.keys.has('KeyD')||state.touch.has('right'))r+=1;if(state.keys.has('ArrowLeft'))state.yaw+=dt*1.24;if(state.keys.has('ArrowRight'))state.yaw-=dt*1.24;if(f||r){let l=Math.hypot(f,r);f/=l;r/=l;let s=Math.min(dt,.07)*2.65;const dx=(-Math.sin(state.yaw)*f+Math.cos(state.yaw)*r)*s;const dz=(-Math.cos(state.yaw)*f-Math.sin(state.yaw)*r)*s;let p=camera.position;if(allowed(p.x+dx,p.z))p.x+=dx;if(allowed(p.x,p.z+dz))p.z+=dz;}setOrientation();}
-function updateGuided(dt){if(!state.guide||state.guidePaused)return;state.guideT+=Math.min(dt,.06)/52;const t=Math.min(1,state.guideT);camera.position.copy(guideCurve.getPoint(t));let target;if(t<.13)target=new THREE.Vector3(0,1.6,0);else if(t<.48)target=new THREE.Vector3(-5.65,2.35,-.6);else if(t<.62)target=new THREE.Vector3(-2.5,2.4,-5.1);else target=new THREE.Vector3(5.65,2.35,-.3);camera.lookAt(target);syncOrientationFromCamera();if(t>=1){state.guide=false;state.guidePaused=false;setOrientation();$('guide-label').textContent=content[state.lang].guide;updateMouseHint();toast(content[state.lang].toastEnd)}}
+function updateGuided(dt){
+ if(!state.guide||state.guidePaused)return;
+ state.guideT+=Math.min(dt,.06)/52;
+ const t=Math.min(1,state.guideT);
+ camera.position.copy(guideCurve.getPoint(t));
+ camera.lookAt(guideLookCurve.getPoint(t));
+ syncOrientationFromCamera();
+ if(t>=1){state.guide=false;state.guidePaused=false;setOrientation();$('guide-label').textContent=content[state.lang].guide;updateMouseHint();toast(content[state.lang].toastEnd)}
+}
 function worldToPlan(x,z){return {x:110+x*15,y:109+z*14.75};}
 $('map-route').setAttribute('d',guideCurve.getPoints(80).map((p,i)=>{const m=worldToPlan(p.x,p.z);return `${i?'L':'M'}${m.x.toFixed(1)},${m.y.toFixed(1)}`}).join(' '));
 function updateMap(){const {x,y}=worldToPlan(camera.position.x,camera.position.z);
@@ -296,7 +305,22 @@ function updateMap(){const {x,y}=worldToPlan(camera.position.x,camera.position.z
  for(const w of WALLS){const node=$('plan-wall-'+w.key);if(node)node.classList.toggle('active',w.key===WALLS[state.hoverWall]?.key&&!$('look-label').hidden&&!$('look-label').classList.contains('blocked'));}
  for(let i=0;i<viewpoints.length;i++){const v=viewpoints[i],el=document.querySelector(`.plan-stop[data-stop="${i}"]`);if(el)el.classList.toggle('active',Math.hypot(camera.position.x-v.position[0],camera.position.z-v.position[2])<.65);}
 }
-function lookForWall(){if(state.mode!=='explore'||state.drawer)return;$('look-label').hidden=true;raycaster.setFromCamera(pointer,camera);let hits=raycaster.intersectObjects(clickable,false);if(hits.length&&hits[0].distance<12){let i=hits[0].object.userData.wall;state.hoverWall=i;$('look-region').textContent=content[state.lang].wallShort[i];$('look-label').hidden=false;}}
+function lookForWall(){
+ if(state.mode!=='explore'||state.drawer)return;
+ const label=$('look-label');label.hidden=true;label.classList.remove('blocked');state.hoverWall=undefined;
+ raycaster.setFromCamera(pointer,camera);
+ const wall=raycaster.intersectObjects(clickable,false)[0];
+ if(!wall||wall.distance>12)return;
+ const obstruction=raycaster.intersectObjects(occluders,false)[0];
+ const t=content[state.lang];
+ if(obstruction&&obstruction.distance+0.035<wall.distance){
+  label.classList.add('blocked');$('look-region').textContent=t.blocked;$('look-hint').textContent=t.blockedHint;
+ }else{
+  state.hoverWall=wall.object.userData.wall;
+  $('look-region').textContent=t.wallShort[state.hoverWall];$('look-hint').textContent=t.look;
+ }
+ label.hidden=false;
+}
 let lastHUD=0;function animate(){requestAnimationFrame(animate);const dt=clock.getDelta();if(state.mode==='explore'){if(!state.drawer){if(state.guide)updateGuided(dt);else move(dt);}let now=performance.now();if(now-lastHUD>135){showPositionInfo();updateMap();lookForWall();lastHUD=now}}else{dust.rotation.y+=dt*.0015}renderer.render(scene,camera)}
 function bind(){
   document.querySelectorAll('[data-nav]').forEach(btn=>btn.onclick=()=>{const k=btn.dataset.nav;if(k==='home'||k==='explore'){setMode(k);if(k==='explore')captureMouse();}else setDrawer(k)});
