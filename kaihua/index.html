@@ -39,6 +39,57 @@
 
 .mouse-hint{position:absolute;top:136px;right:clamp(25px,4.5vw,78px);padding:11px 15px;border:1px solid rgba(223,193,146,.50);background:rgba(16,27,20,.84);font-size:10px;letter-spacing:.05em;color:#efdbc0;pointer-events:none;max-width:280px;line-height:1.7;text-align:right}
 @media(max-width:680px){.mouse-hint{display:none!important}}
+
+/* Full-screen research pages, with a reading layout rather than a right-hand drawer. */
+.overlay{inset:0;display:block;z-index:40;background:#eae5d9}
+.overlay-backdrop{display:none}
+.drawer{position:absolute;inset:0;width:100%;max-width:none;height:100%;min-height:100%;box-shadow:none;background:#eae5d9;display:flex;flex-direction:column;overflow:hidden}
+.drawer-top{flex:0 0 auto;padding:21px clamp(22px,5vw,84px);background:#eae5d9;display:flex;align-items:center;justify-content:space-between;min-height:79px;border-bottom:1px solid #c9c6b9}
+.drawer-top .section-overline{color:#6f6656;font-size:10px;letter-spacing:.2em}
+.drawer-close{display:inline-flex;gap:16px;align-items:center;justify-content:center;border:1px solid #bfb9aa;border-radius:0;width:auto;height:40px;padding:0 16px;color:#21352a;background:transparent;font-size:11px;line-height:1.1;letter-spacing:.045em}
+.drawer-close .close-symbol{font-size:20px;font-weight:300;line-height:1}
+.drawer-close:hover{background:#d8d5c9}
+.drawer-scroll{flex:1 1 auto;overflow:auto;overscroll-behavior:contain;padding:42px clamp(22px,5vw,84px) 100px}
+.archive-page,.method-page{max-width:1260px;margin:0 auto}
+.drawer .sublabel{display:block;color:#897860;font-size:10px;letter-spacing:.19em}
+.drawer .archive-title{font:normal clamp(44px,5.5vw,80px)/1.04 var(--serif);letter-spacing:-.055em;margin:18px 0 17px}
+.drawer .archive-intro{max-width:820px;margin:0 0 34px;font-size:14px;line-height:1.9;color:#626859}
+.archive-page .wall-tabs{margin:0 0 35px;display:flex;border-top:1px solid #bcb8a9;border-bottom:1px solid #bcb8a9}
+.archive-page .wall-tabs button{flex:1;text-align:center;padding:17px 12px}
+.wall-detail-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.8fr);gap:clamp(28px,4.5vw,70px);align-items:start}
+.wall-artwork{min-width:0}
+.wall-artwork .comparison-head{margin:0 0 12px}
+.wall-artwork .compare-view{height:clamp(340px,46vw,575px);background:#d4cec0}
+.wall-artwork .compare-view .missing{background:linear-gradient(140deg,#ded8ca,#ccc5b5);border:16px solid #d8d1c3}
+.wall-artwork .missing strong{font-size:clamp(23px,2.4vw,36px)}
+.wall-artwork .missing small{max-width:330px}
+.wall-detail-info{border-top:1px solid #b3b4a5;padding-top:28px}
+.wall-detail-info h3{font:normal clamp(36px,3.2vw,50px)/1.05 var(--serif);letter-spacing:-.03em;margin:14px 0 10px}
+.wall-detail-info .wall-scripture{color:#89775e;font-size:11px;letter-spacing:.15em}
+.wall-detail-info>p{color:#4f5b50;font-size:14px;line-height:2;margin:24px 0}
+.wall-detail-info .evidence-box{margin:0 0 27px}
+.wall-detail-info .visit-wall{margin:24px 0 0}
+.method-page{max-width:1040px}
+.method-page .method-lead{max-width:850px;margin:25px 0 48px;font-size:clamp(24px,3vw,36px)}
+.method-page .method-entry{grid-template-columns:58px minmax(0,1fr);gap:28px;padding:31px 0}
+.method-page .method-entry h3{font-size:clamp(22px,2.5vw,32px)}
+.method-page .method-entry p{max-width:800px;font-size:14px}
+@media(max-width:860px){
+  .wall-detail-grid{grid-template-columns:1fr;gap:30px}
+  .wall-artwork .compare-view{height:clamp(260px,60vw,440px)}
+  .drawer-scroll{padding:30px 24px 85px}
+  .drawer-top{padding:16px 24px}
+}
+@media(max-width:560px){
+  .drawer-close{padding:0 10px;font-size:10px;gap:9px}
+  .drawer-top{min-height:68px;padding:12px 18px}
+  .drawer-scroll{padding:24px 18px 85px}
+  .drawer .archive-title{font-size:45px}
+  .archive-page .wall-tabs{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:thin}
+  .archive-page .wall-tabs button{min-width:120px;flex:0 0 auto}
+  .wall-artwork .compare-view{height:265px}
+  .wall-detail-info h3{font-size:34px}
+}
 </style>
   <script type="importmap">
     {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}
@@ -109,7 +160,7 @@
     </section>
   </main>
 
-  <div id="overlay" class="overlay" hidden><button class="overlay-backdrop" id="close-backdrop" aria-label="Close panel"></button><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-heading"><div class="drawer-top"><span class="section-overline" id="drawer-kicker">KAIHUA / ARCHIVE</span><button id="close-overlay" aria-label="Close" class="drawer-close">×</button></div><div class="drawer-scroll" id="drawer-body"></div></aside></div>
+  <div id="overlay" class="overlay" hidden><button class="overlay-backdrop" id="close-backdrop" aria-label="Close panel"></button><section class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-heading"><div class="drawer-top"><span class="section-overline" id="drawer-kicker">KAIHUA / ARCHIVE</span><button id="close-overlay" aria-label="Return to previous view" class="drawer-close"><span id="close-label">← Return to hall</span><span class="close-symbol" aria-hidden="true">×</span></button></div><div class="drawer-scroll" id="drawer-body"></div></section></div>
   <div id="toast" role="status" aria-live="polite"></div>
   <footer class="footline"><span>© 2026 · KAIHUA SPATIAL STUDY</span><span id="footnote">Interpretive prototype · not a measured reconstruction</span></footer>
   <script type="module">
@@ -135,7 +186,7 @@ const content = {
       ['NORTH OF ALTAR','Turn, and another story begins.','An image disappears from view while the next composition comes forward.'],
       ['EAST AISLE','The image belongs to the room.','Architecture determines the order in which you encounter the paintings.']
     ],
-    archiveTitle:'The wall archive',archiveIntro:'Four wall zones, one continuous interior. Select a wall to examine its theme, location, and available visual evidence. The comparison viewer unlocks when original scans and restoration images are supplied.',
+    returnHall:'← Return to the hall',returnIntro:'← Return to introduction',archiveTitle:'The wall archive',archiveIntro:'Four wall zones, one continuous interior. Select a wall to examine its theme, location, and available visual evidence. The comparison viewer unlocks when original scans and restoration images are supplied.',
     wallNames:['West wall','East wall','North · west bay','North · east bay'],wallShort:['WEST WALL','EAST WALL','NORTH / WEST','NORTH / EAST'],
     wallNotes:[
       'Narratives associated with the Sutra on Repaying Kindness. Sequential scenes are read through movement, not only through their placement on a flat surface.',
@@ -163,7 +214,7 @@ const content = {
     enter:'进入大殿',archive:'查看壁画图录',caption:'关于建筑空间、图像叙事与身体观看的交互实验。本版本为空间示意，真实壁画扫描素材尚待接入。',
     tourTitle:'走入图像之中',tourSub:'前进、转身，观察视线如何变化。',controls:'WASD 移动 · 鼠标转向 · 1–4 观察点 · Esc 释放 · E 查看',guide:'自动导览',pause:'暂停导览',resume:'继续导览',reset:'复位',exit:'退出',plan:'空间平面图',planNote:'点击地图 1–4 或按数字键 · 示意图',look:'点击或按 E 查看 ↗',blocked:'视线被建筑遮挡',blockedHint:'向旁边移动，观察佛坛或立柱如何遮挡画面。',viewToasts:['南侧入口：佛坛挡住部分视野。','西侧通道：从柱间观看壁画。','北侧转身：另一面壁画逐渐进入视野。','东侧通道：观察对面墙上的图像。'],
     steps:[['南侧入口','第一眼，无法看见全部。','从殿门向内看，佛坛会挡住部分北壁。'],['西侧通道','西壁随着脚步展开。','移动一点位置，立柱后的叙事细节就会出现。'],['佛坛北侧','转身，另一段故事开始。','前一面墙渐渐退出视线，下一面墙随之显现。'],['东侧通道','图像属于这座建筑。','建筑决定了人以什么顺序与壁画相遇。']],
-    archiveTitle:'壁画空间图录',archiveIntro:'四个壁面分区，共同组成一座连续的殿内空间。选择墙面，查看画题、位置与证据。上传真实扫描图后可开启原图／复原对比。',
+    returnHall:'← 返回大殿',returnIntro:'← 返回项目首页',archiveTitle:'壁画空间图录',archiveIntro:'四个壁面分区，共同组成一座连续的殿内空间。选择墙面，查看画题、位置与证据。上传真实扫描图后可开启原图／复原对比。',
     wallNames:['西壁','东壁','北壁 · 西次间','北壁 · 东次间'],wallShort:['西壁','东壁','北壁西侧','北壁东侧'],
     wallNotes:['与《大方便佛报恩经》相关的叙事画面。图像不仅铺陈在一面墙上，也随着观看者的移动逐段显现。','与《华严经》相关的图像。观众转向东壁时，与西壁之间的观看关系也随之改变。','北壁西次间与西侧壁画在题材和空间上有联系。','北壁东次间的弥勒上生经变，与北侧门洞相邻。'],
     themes:['报恩经变','华严经变','北壁西次间相关题材','弥勒上生经变／兜率天'],
@@ -276,10 +327,23 @@ function captureMouse(){if(state.mode!=='explore'||state.drawer||state.guide||ma
   try{state.justRequestedLock=true;const lock=renderer.domElement.requestPointerLock?.();if(lock&&typeof lock.catch==='function')lock.catch(()=>{state.justRequestedLock=false;updateMouseHint()});}catch(e){state.justRequestedLock=false;updateMouseHint();}}
 function cancelGuide(){if(state.guide){state.guide=false;state.guidePaused=false;syncOrientationFromCamera();$('guide-label').textContent=content[state.lang].guide;updateMouseHint();}}
 setHomeCamera();
-function applyLang(){const t=content[state.lang];document.documentElement.lang=state.lang==='zh'?'zh-CN':'en';$('language').textContent=state.lang==='en'?'中文':'EN';['nav-home','nav-explore','nav-atlas','nav-method'].forEach((id,i)=>$(id).textContent=t.nav[i]);$('hero-kicker').textContent=t.kicker;$('hero-heading').innerHTML=t.hero;$('hero-subtitle').textContent=t.sub;$('hero-copy').textContent=t.copy;$('enter-label').textContent=t.enter;$('hero-archive').innerHTML=`${t.archive} <span>↗</span>`;$('hero-caption').textContent=t.caption;$('tour-title').textContent=t.tourTitle;$('tour-subtitle').textContent=t.tourSub;$('controls-text').textContent=t.controls;$('guide-label').textContent=state.guide?(state.guidePaused?t.resume:t.pause):t.guide;$('reset-label').textContent=t.reset;$('exit-label').textContent=t.exit;$('plan-label').textContent=t.plan;$('plan-note').textContent=t.planNote;$('look-hint').textContent=t.look;$('mouse-hint').textContent=state.lang==='en'?'Click the hall to resume mouse look · Esc unlocks':'点击大殿继续鼠标转向 · Esc 释放鼠标';$('footnote').textContent=t.foot;$('loading-text').textContent=t.loading;showPositionInfo();if(!$('overlay').hidden)renderDrawer();}
-function clearDrawer(){const el=$('overlay');el.hidden=true;state.drawer=null;updateMouseHint();}
+function applyLang(){const t=content[state.lang];document.documentElement.lang=state.lang==='zh'?'zh-CN':'en';$('language').textContent=state.lang==='en'?'中文':'EN';['nav-home','nav-explore','nav-atlas','nav-method'].forEach((id,i)=>$(id).textContent=t.nav[i]);$('hero-kicker').textContent=t.kicker;$('hero-heading').innerHTML=t.hero;$('hero-subtitle').textContent=t.sub;$('hero-copy').textContent=t.copy;$('enter-label').textContent=t.enter;$('hero-archive').innerHTML=`${t.archive} <span>↗</span>`;$('hero-caption').textContent=t.caption;$('tour-title').textContent=t.tourTitle;$('tour-subtitle').textContent=t.tourSub;$('controls-text').textContent=t.controls;$('guide-label').textContent=state.guide?(state.guidePaused?t.resume:t.pause):t.guide;$('reset-label').textContent=t.reset;$('exit-label').textContent=t.exit;$('plan-label').textContent=t.plan;$('plan-note').textContent=t.planNote;$('look-hint').textContent=t.look;$('mouse-hint').textContent=state.lang==='en'?'Click the hall to resume mouse look · Esc unlocks':'点击大殿继续鼠标转向 · Esc 释放鼠标';$('footnote').textContent=t.foot;$('loading-text').textContent=t.loading;showPositionInfo();if(!$('overlay').hidden){$('close-label').textContent=state.mode==='explore'?t.returnHall:t.returnIntro;renderDrawer();}}
+function clearDrawer(){
+ const el=$('overlay');el.hidden=true;state.drawer=null;state.keys.clear();state.touch.clear();
+ updateMouseHint();
+ // The camera is deliberately not reset: visitors return to exactly where they stood.
+}
 function setMode(mode){releaseMouse();clearDrawer();state.mode=mode;state.keys.clear();state.touch.clear();document.body.classList.toggle('mode-explore',mode==='explore');$('home').hidden=mode==='explore';$('explore-ui').hidden=mode!=='explore';if(mode==='explore'){setEntryCamera();state.guide=false;state.guideT=0;state.guidePaused=false;state.positions.clear();showPositionInfo();if(!matchMedia('(pointer:coarse)').matches)toast(content[state.lang].toastGuide);}else setHomeCamera();document.querySelectorAll('.navlink').forEach(b=>b.classList.toggle('active',b.dataset.nav===mode));updateMouseHint();}
-function setDrawer(view,wall=state.activeWall){releaseMouse();state.keys.clear();state.drawer=view;state.activeWall=wall;$('overlay').hidden=false;renderDrawer();updateMouseHint();document.querySelectorAll('.navlink').forEach(b=>b.classList.toggle('active',b.dataset.nav===view));}
+function setDrawer(view,wall=state.activeWall){
+ releaseMouse();state.keys.clear();state.touch.clear();
+ state.drawer=view;state.activeWall=wall;
+ $('overlay').hidden=false;
+ $('drawer-kicker').textContent=view==='atlas'?'KAIHUA / WALL ARCHIVE':'KAIHUA / METHOD & EVIDENCE';
+ $('close-label').textContent=state.mode==='explore'?content[state.lang].returnHall:content[state.lang].returnIntro;
+ $('drawer-body').scrollTop=0;
+ renderDrawer();updateMouseHint();
+ document.querySelectorAll('.navlink').forEach(b=>b.classList.toggle('active',b.dataset.nav===view));
+}
 function renderDrawer(){const t=content[state.lang],body=$('drawer-body');if(state.drawer==='atlas'){const i=state.activeWall,w=WALLS[i],a=state.assets[w.key]||{};const hasBoth=Boolean(a.original&&a.restored&&state.available[w.key]?.original&&state.available[w.key]?.restored);
   body.innerHTML=`<span class="sublabel">AN ATLAS OF RELATIONSHIPS / 02</span><h2 id="drawer-heading">${t.archiveTitle}</h2><p class="intro">${t.archiveIntro}</p><div class="wall-tabs">${t.wallNames.map((v,j)=>`<button type="button" class="${j===i?'active':''}" data-wall="${j}">${v}</button>`).join('')}</div><article class="wall-card"><h3>${t.wallNames[i]}</h3><span class="wall-scripture">${t.themes[i]}</span><p>${t.wallNotes[i]}</p><div class="evidence-box"><p>${t.wallLocation}</p><span class="status-tag">${t.assetTag}</span></div><div class="comparison-head"><span>${t.comparison}</span><span>${hasBoth?'01 — 02':'SOURCE STATUS / 00'}</span></div><div class="compare-view" id="compare-view">${hasBoth?`<img src="${safeUrl(a.original)}" alt="original mural scan"><img id="compare-restored" src="${safeUrl(a.restored)}" alt="digitally restored mural"><span class="compare-line" id="compare-line"></span>`:`<div class="missing"><strong>${t.noImages}</strong><small>${t.noImagesHint}</small></div>`}</div>${hasBoth?`<input class="compare-range" id="compare-range" type="range" min="0" max="100" value="50" aria-label="Before and after reveal slider"><div class="compare-legend"><span>${t.original}</span><span>${t.restored}</span></div>`:''}<button class="visit-wall" id="visit-wall">${t.wallWalk}<span>↗</span></button></article>`;
   body.querySelectorAll('[data-wall]').forEach(el=>el.onclick=()=>setDrawer('atlas',Number(el.dataset.wall)));const range=$('compare-range');if(range)range.oninput=()=>{const val=Number(range.value);$('compare-restored').style.clipPath=`inset(0 ${100-val}% 0 0)`;$('compare-line').style.left=`${val}%`};$('visit-wall').onclick=()=>{setMode('explore');camera.position.set(...w.target);const dir=new THREE.Vector3(w.x,w.y,w.z).sub(camera.position);state.yaw=Math.atan2(-dir.x,-dir.z);state.pitch=Math.atan2(dir.y,Math.hypot(dir.x,dir.z));setOrientation();captureMouse()};
