@@ -103,3 +103,17 @@ Latest checks: JavaScript source parses, all primary wall-entry paths call the s
 Four CC BY 4.0 published photo crops are included and listed in `assets/murals/manifest.json`. Open `assets/murals/index.html` for full credits, license links, processing notes, and attribution uncertainties. The sources call these Kaihua Song murals; the 2018 source has a conflicting Taiyuan geographic description. These samples are explicitly illustrative: their original wall locations and relationship to the wall themes are unverified. Do not use them as a surveyed Gaoping reconstruction. No restored images are supplied.
 
 Original-only images now appear in the archive; asynchronous image completion updates the open viewer. The historic image remains on the 3D wall if a restoration pair is later supplied. Photo aspect ratios are preserved. Fixed comparison labels, language switching after the loading element is removed, drag/tap separation, secondary pointers, keyboard controls on interactive elements, guide/reset movement clearing, navigation highlighting, the raycast crosshair alignment, and short-screen intro clipping. WebGL initialization failures show a static image-records link that also works if the module cannot start. Three.js is bundled locally.
+
+## V1.5 — Reference-guided hall geometry
+
+The hall now follows the four user-provided facade and interior reference photographs at a schematic level. Model implementation is in `assets/hall.js`. It replaces the flat beam grid with a raised roof, closely spaced rafters, purlins, simplified bracket sets, and a grey tiled outer roof with an east-west ridge and lifted eaves. The south facade has a central entrance and two barred windows. Weathered timber, brick podiums under the posts, stone paving, and muted painted friezes replace the previous plain primitives.
+
+A red-topped masonry altar carries a simplified seated Buddha, lotus pedestal and layered canopy. The sculpture, painted motifs, roof curvature and bracket assemblies are procedural interpretations; they are not scans or measured historic joinery. Published mural reference samples and their existing attribution limitations remain unchanged.
+
+Collision footprints now include the square column podiums and altar clearance; their plan footprints are generated from the same model. The tour's final approach was moved outward to clear the larger podium. Rear mural planes now sit against the rear wall. The statue and architecture participate in sightline occlusion. Neutral front-window daylight replaces the previous green cast; touch devices use a smaller shadow map.
+
+### Browser regression checks
+
+Serve the repository root with `python -m http.server 8080 --bind 127.0.0.1`. In a separate tool environment install Playwright (`npm install playwright`, `npx playwright install chromium`) and run `node kaihua/tests/browser.cjs`. Set `CHROME_PATH` to use an installed Chrome instead of the downloaded browser, and `KAIHUA_TEST_URL` to test another server path. The test runner must be able to resolve the Playwright package. It injects its test API into the HTTP response only; the production page exports no debug state.
+
+Checks cover original-only images, late-image updates, missing images, paired comparison, language switching, keyboard/pointer inspection, focus handling, 1,001 tour-path samples, square podium/altar collisions, sculpture occlusion, WebGL failure/static fallback, and a 390-pixel mobile archive layout. Desktop reference renders were visually checked from the entrance, side aisle and facade.
