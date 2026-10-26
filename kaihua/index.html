@@ -324,7 +324,7 @@ function releaseMouse(){if(document.pointerLockElement===renderer.domElement)doc
 function updateMouseHint(){const hint=$('mouse-hint');if(hint)hint.hidden=state.mode!=='explore'||Boolean(state.drawer)||state.guide||document.pointerLockElement===renderer.domElement||matchMedia('(pointer:coarse)').matches;}
 function captureMouse(){if(state.mode!=='explore'||state.drawer||state.guide||matchMedia('(pointer:coarse)').matches)return;
   if(document.pointerLockElement===renderer.domElement)return;
-  try{state.justRequestedLock=true;const lock=renderer.domElement.requestPointerLock?.();if(lock&&typeof lock.catch==='function')lock.catch(()=>{state.justRequestedLock=false;updateMouseHint()});}catch(e){state.justRequestedLock=false;updateMouseHint();}}
+  try{const lock=renderer.domElement.requestPointerLock?.();if(lock&&typeof lock.catch==='function')lock.catch(()=>updateMouseHint());}catch(e){updateMouseHint();}}
 function cancelGuide(){if(state.guide){state.guide=false;state.guidePaused=false;syncOrientationFromCamera();$('guide-label').textContent=content[state.lang].guide;updateMouseHint();}}
 setHomeCamera();
 function applyLang(){const t=content[state.lang];document.documentElement.lang=state.lang==='zh'?'zh-CN':'en';$('language').textContent=state.lang==='en'?'中文':'EN';['nav-home','nav-explore','nav-atlas','nav-method'].forEach((id,i)=>$(id).textContent=t.nav[i]);$('hero-kicker').textContent=t.kicker;$('hero-heading').innerHTML=t.hero;$('hero-subtitle').textContent=t.sub;$('hero-copy').textContent=t.copy;$('enter-label').textContent=t.enter;$('hero-archive').innerHTML=`${t.archive} <span>↗</span>`;$('hero-caption').textContent=t.caption;$('tour-title').textContent=t.tourTitle;$('tour-subtitle').textContent=t.tourSub;$('controls-text').textContent=t.controls;$('guide-label').textContent=state.guide?(state.guidePaused?t.resume:t.pause):t.guide;$('reset-label').textContent=t.reset;$('exit-label').textContent=t.exit;$('plan-label').textContent=t.plan;$('plan-note').textContent=t.planNote;$('look-hint').textContent=t.look;$('mouse-hint').textContent=state.lang==='en'?'Click the hall to resume mouse look · Esc unlocks':'点击大殿继续鼠标转向 · Esc 释放鼠标';$('footnote').textContent=t.foot;$('loading-text').textContent=t.loading;showPositionInfo();if(!$('overlay').hidden){$('close-label').textContent=state.mode==='explore'?t.returnHall:t.returnIntro;renderDrawer();}}
@@ -425,20 +425,32 @@ function updateMap(){const {x,y}=worldToPlan(camera.position.x,camera.position.z
  for(const w of WALLS){const node=$('plan-wall-'+w.key);if(node)node.classList.toggle('active',w.key===WALLS[state.hoverWall]?.key&&!$('look-label').hidden&&!$('look-label').classList.contains('blocked'));}
  for(let i=0;i<viewpoints.length;i++){const v=viewpoints[i],el=document.querySelector(`.plan-stop[data-stop="${i}"]`);if(el)el.classList.toggle('active',Math.hypot(camera.position.x-v.position[0],camera.position.z-v.position[2])<.65);}
 }
+// Shared raycasting for the crosshair, click, keyboard inspection, and touch.
+function hitWall(clientX=null,clientY=null){
+ let ndc=pointer;
+ if(clientX!==null&&clientY!==null&&document.pointerLockElement!==renderer.domElement){
+   const box=renderer.domElement.getBoundingClientRect();
+   ndc=new THREE.Vector2(((clientX-box.left)/box.width)*2-1,1-((clientY-box.top)/box.height)*2);
+ }
+ raycaster.setFromCamera(ndc,camera);
+ const wall=raycaster.intersectObjects(clickable,false)[0];
+ if(!wall||wall.distance>12)return null;
+ const blocker=raycaster.intersectObjects(occluders,false)[0];
+ return blocker&&blocker.distance+.035<wall.distance?{blocked:true}:{blocked:false,index:wall.object.userData.wall};
+}
+function inspectWall(clientX=null,clientY=null){
+ if(state.mode!=='explore'||state.drawer)return false;
+ const hit=hitWall(clientX,clientY);
+ if(!hit||hit.blocked)return false;
+ setDrawer('atlas',hit.index);return true;
+}
 function lookForWall(){
  if(state.mode!=='explore'||state.drawer)return;
  const label=$('look-label');label.hidden=true;label.classList.remove('blocked');state.hoverWall=undefined;
- raycaster.setFromCamera(pointer,camera);
- const wall=raycaster.intersectObjects(clickable,false)[0];
- if(!wall||wall.distance>12)return;
- const obstruction=raycaster.intersectObjects(occluders,false)[0];
+ const hit=hitWall();if(!hit)return;
  const t=content[state.lang];
- if(obstruction&&obstruction.distance+0.035<wall.distance){
-  label.classList.add('blocked');$('look-region').textContent=t.blocked;$('look-hint').textContent=t.blockedHint;
- }else{
-  state.hoverWall=wall.object.userData.wall;
-  $('look-region').textContent=t.wallShort[state.hoverWall];$('look-hint').textContent=t.look;
- }
+ if(hit.blocked){label.classList.add('blocked');$('look-region').textContent=t.blocked;$('look-hint').textContent=t.blockedHint;}
+ else{state.hoverWall=hit.index;$('look-region').textContent=t.wallShort[hit.index];$('look-hint').textContent=t.look;}
  label.hidden=false;
 }
 let lastHUD=0;function animate(){requestAnimationFrame(animate);const dt=clock.getDelta();if(state.mode==='explore'){if(!state.drawer){if(state.guide)updateGuided(dt);else move(dt);}let now=performance.now();if(now-lastHUD>135){showPositionInfo();updateMap();lookForWall();lastHUD=now}}else{dust.rotation.y+=dt*.0015}renderer.render(scene,camera)}
@@ -452,7 +464,7 @@ function bind(){
   $('close-backdrop').onclick=clearDrawer;
   $('exit-tour').onclick=()=>setMode('home');
   $('reset-view').onclick=()=>{state.guide=false;state.guidePaused=false;state.keys.clear();setEntryCamera();updateMouseHint();$('guide-label').textContent=content[state.lang].guide};
-  $('look-label').onclick=()=>{if(state.hoverWall!==undefined)setDrawer('atlas',state.hoverWall)};
+  $('look-label').onclick=()=>inspectWall();
   $('fullscreen').onclick=()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()};
   $('fallback-atlas').onclick=()=>setDrawer('atlas');
   for(const marker of document.querySelectorAll('[data-stop]')){
@@ -464,7 +476,7 @@ function bind(){
     if(e.key==='Escape'){if(state.drawer)clearDrawer();return}
     if(state.mode!=='explore'||state.drawer||e.target.matches('input,textarea,select'))return;
     if(/^Digit[1-4]$/.test(e.code)&&!e.repeat){e.preventDefault();jumpToView(Number(e.code.slice(-1))-1);return}
-    if(e.code==='KeyE'&&!e.repeat){e.preventDefault();if(!$('look-label').hidden&&state.hoverWall!==undefined)setDrawer('atlas',state.hoverWall);return}
+    if(e.code==='KeyE'&&!e.repeat){e.preventDefault();inspectWall();return}
     if(/^(Key[WASD]|Arrow)/.test(e.code)){
       e.preventDefault();cancelGuide();state.keys.add(e.code);
     }
@@ -482,7 +494,7 @@ function bind(){
   renderer.domElement.addEventListener('pointerdown',e=>{
     if(state.mode!=='explore'||state.drawer)return;
     if(document.pointerLockElement===renderer.domElement)return;
-    if(e.pointerType==='mouse'&&renderer.domElement.requestPointerLock){captureMouse();return}
+    if(e.pointerType==='mouse'&&renderer.domElement.requestPointerLock)return;
     state.mouseDown=true;state.dragged=false;px=e.clientX;py=e.clientY;
     renderer.domElement.setPointerCapture?.(e.pointerId);
   });
@@ -493,17 +505,16 @@ function bind(){
     cancelGuide();state.yaw-=dx*.0045;state.pitch=THREE.MathUtils.clamp(state.pitch-dy*.0038,-1.32,1.32);
     px=e.clientX;py=e.clientY;
   });
-  renderer.domElement.addEventListener('pointerup',()=>{
-    if(state.mouseDown&&state.mode==='explore'&&!state.dragged&&state.hoverWall!==undefined&&!$('look-label').hidden)setDrawer('atlas',state.hoverWall);
+  renderer.domElement.addEventListener('pointerup',e=>{
+    if(state.mouseDown&&state.mode==='explore'&&!state.dragged&&e.pointerType!=='mouse')inspectWall(e.clientX,e.clientY);
     state.mouseDown=false;
   });
   renderer.domElement.addEventListener('pointercancel',()=>state.mouseDown=false);
-  renderer.domElement.addEventListener('click',()=>{
+  renderer.domElement.addEventListener('click',e=>{
     if(state.mode!=='explore'||state.drawer)return;
-    if(state.justRequestedLock){state.justRequestedLock=false;return}
-   if(document.pointerLockElement===renderer.domElement){
-      if(!$('look-label').hidden&&state.hoverWall!==undefined)setDrawer('atlas',state.hoverWall);
-    }else captureMouse();
+    // Locked: click the surface under the crosshair. Unlocked: raycast the clicked pixel.
+    if(inspectWall(e.clientX,e.clientY))return;
+    if(e.pointerType!=='touch')captureMouse();
   });
   for(const btn of document.querySelectorAll('[data-move]')){
     const dir=btn.dataset.move;
