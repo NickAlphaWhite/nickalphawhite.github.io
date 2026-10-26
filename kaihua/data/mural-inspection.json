@@ -1,0 +1,91 @@
+{
+  "inputs": [
+    {
+      "wall": "left",
+      "level": 4,
+      "file": "left_wall_01_level4.webp",
+      "width": 3246,
+      "height": 1125,
+      "bytes": 1313664,
+      "sha256": "3de451c39fd9700240780757bb57bd673cb862b39a7014f295711277d8ece4f0"
+    },
+    {
+      "wall": "left",
+      "level": 3,
+      "file": "left_wall_01_level3.png",
+      "width": 6492,
+      "height": 2251,
+      "bytes": 30373331,
+      "sha256": "05119aa0f3b7b3585af08a504ded09d4171c3941b22a5467662ac2f92a937dcb"
+    },
+    {
+      "wall": "left",
+      "level": 2,
+      "file": "left_wall_01_level2.png",
+      "width": 12985,
+      "height": 4503,
+      "bytes": 123317946,
+      "sha256": "580f328ef582a171177f675c24704095eb768d9dd62b156cd7ae8422a33efb53"
+    },
+    {
+      "wall": "back",
+      "level": 4,
+      "file": "back_wall_02_level4.webp",
+      "width": 3284,
+      "height": 1158,
+      "bytes": 853232,
+      "sha256": "a2d326522931ca8f00a4e545b50a2e60fe0c57d1cb5f8225eb7a8c7dbfd190b7"
+    },
+    {
+      "wall": "back",
+      "level": 3,
+      "file": "back_wall_02_level3.png",
+      "width": 6568,
+      "height": 2317,
+      "bytes": 21559411,
+      "sha256": "8052934852feec1655506bf6e8de151eb301671b2aa5e156d4ac59a7146dde0b"
+    },
+    {
+      "wall": "back",
+      "level": 2,
+      "file": "back_wall_02_level2.png",
+      "width": 13136,
+      "height": 4635,
+      "bytes": 85002046,
+      "sha256": "7f40fcef59a6636acadc9d49e44975eef5872b87d1172c636813224b0aab3f26"
+    },
+    {
+      "wall": "right",
+      "level": 4,
+      "file": "right_wall_01_level4.webp",
+      "width": 3187,
+      "height": 1156,
+      "bytes": 1250498,
+      "sha256": "7fb3511b1108856c320175232c2c0f35f1e081806d95da0e15ec0bea55386650"
+    },
+    {
+      "wall": "right",
+      "level": 3,
+      "file": "right_wall_01_level3.png",
+      "width": 6374,
+      "height": 2313,
+      "bytes": 29850590,
+      "sha256": "8e53a4d29733e447ace702a32bc4c210688fc443d01badf8fab52a9d79678009"
+    },
+    {
+      "wall": "right",
+      "level": 2,
+      "file": "right_wall_01_level2.png",
+      "width": 12748,
+      "height": 4626,
+      "bytes": 118659233,
+      "sha256": "591e88c6a8bc9436d2a151aef2fc2c659fb1c5dd369087883dd1a07b57efd658"
+    }
+  ],
+  "outputLevels": [
+    4,
+    3,
+    2
+  ],
+  "originalsModified": false
+}

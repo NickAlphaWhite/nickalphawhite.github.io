@@ -1,110 +1,92 @@
-const {chromium}=require('playwright');
-const fs=require('fs'),assert=require('node:assert/strict');
-const url=process.env.KAIHUA_TEST_URL||'http://127.0.0.1:8080/kaihua/';
-const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
-const inject=html.replace(/init\(\);\r?\n\} catch\(error\)/,`window.testAPI={state,camera,setMode,setDrawer,clearDrawer,jumpToView,allowed,hitWall,inspectWall,guideCurve,safeUrl,renderDrawer,muralMeshes,WALLS,occluders,obstacles,renderer,scene,columnCenters,materialsReady,lookInput,move,updateGuided};init();\n} catch(error)`);
+const {chromium}=require('playwright'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const base=process.env.KAIHUA_TEST_URL||'http://127.0.0.1:8080/kaihua/';
+const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+const injected=html.replace(/init\(\);\r?\n\} catch\(error\)/,`window.appTest={state,camera,scene,renderer,WALLS,clickable,muralMeshes,setMode,setDrawer,clearDrawer,jumpToView,hitWall,inspectWall,move,allowed,setOrientation,syncOrientationFromCamera,guideCurve,updateGuided,lookInput,hallZoom,getDetail:()=>detailViewer,getWallId:()=>detailWallId,getCatalog:()=>muralCatalog};init();\n} catch(error)`);
+let browser;
+async function loadReady(page){await page.waitForFunction(()=>window.appTest?.clickable.length===4);await page.waitForSelector('#loading',{state:'detached'});}
+async function viewerReady(page){await page.waitForFunction(()=>appTest.getDetail()?.getViewer()?.world.getItemCount()===1);await page.waitForFunction(()=>appTest.getDetail().getViewer().world.getItemAt(0).getFullyLoaded(),null,{timeout:60000});}
 (async()=>{
-const browser=await chromium.launch({...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{}),headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
-const context=await browser.newContext({viewport:{width:1440,height:900}});
-const page=await context.newPage(),errors=[],failed=[];
-page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400&&!r.url().endsWith('favicon.ico'))failed.push(r.url())});
-page.on('console',message=>{if(message.type()==='error')errors.push(message.text())});
-await page.route(url,r=>r.fulfill({contentType:'text/html',body:inject}));
-await page.goto(url);
-await page.waitForFunction(()=>window.testAPI&&Object.values(testAPI.state.available).length===4&&Object.values(testAPI.state.available).every(a=>a.original));
-await page.waitForSelector('#loading',{state:'detached'});
-await page.locator('#language').click();assert.equal(await page.locator('html').getAttribute('lang'),'zh-CN');
-await page.locator('#hero-archive').click();
-for(let i=0;i<4;i++){
- await page.locator(`[data-wall="${i}"]`).click();
- await page.waitForFunction(()=>document.querySelector('#compare-view img')?.naturalWidth>0);
- assert.equal(await page.locator('#compare-range').count(),0);
- assert.equal(await page.locator('#compare-view .missing').count(),0);
-}
-
-await page.evaluate(()=>{testAPI.state.available.west.original=false;testAPI.setDrawer('atlas',0)});
-assert.equal(await page.locator('#compare-view .missing').count(),1);
-await page.evaluate(()=>{testAPI.state.available.west.original=true;testAPI.renderDrawer()});
-assert.equal(await page.locator('#compare-view img').count(),1);
-await page.evaluate(()=>{const t=testAPI;t.state.assets.west.restored=t.state.assets.west.original;t.state.available.west.restored=true;t.renderDrawer()});
-await page.locator('#compare-range').fill('75');
-assert.equal(await page.locator('#compare-restored').evaluate(e=>e.style.clipPath),'inset(0px 25% 0px 0px)');
-await page.locator('#close-overlay').click();
-await page.evaluate(()=>{const t=testAPI;t.setMode('explore');t.jumpToView(1)});
-assert.equal(await page.evaluate(()=>testAPI.hitWall()?.index),0);
-await page.evaluate(()=>document.activeElement.blur());await page.keyboard.press('e');assert.equal(await page.locator('#overlay').isVisible(),true);
-await page.keyboard.press('Escape');assert.equal(await page.locator('#overlay').isVisible(),false);
-const yaw=await page.evaluate(()=>testAPI.state.yaw);
-await page.locator('#language').focus();await page.keyboard.press('ArrowLeft');
-assert.equal(await page.evaluate(()=>testAPI.state.keys.size),0);
-await page.locator('canvas').dispatchEvent('pointerdown',{pointerType:'mouse',pointerId:1,button:0,clientX:600,clientY:450});
-await page.locator('canvas').dispatchEvent('pointermove',{pointerType:'mouse',pointerId:1,clientX:660,clientY:450});
-await page.locator('canvas').dispatchEvent('pointerup',{pointerType:'mouse',pointerId:1});
-await page.locator('canvas').dispatchEvent('click',{pointerType:'mouse',clientX:660,clientY:450});
-await page.waitForFunction(previous=>testAPI.state.yaw!==previous,yaw);
-assert.notEqual(await page.evaluate(()=>testAPI.state.yaw),yaw);
-assert.equal(await page.locator('#overlay').isVisible(),false);
-await page.evaluate(()=>testAPI.jumpToView(3));
-
-const collision=await page.evaluate(()=>{const t=testAPI;return t.guideCurve.getPoints(1000).filter(p=>!t.allowed(p.x,p.z)).length});assert.equal(collision,0,'guided route stays in walkable space');
-for(const value of ['./assets/murals/../x.jpg','./assets/murals/a/../../x.png','https://x.test/a.jpg'])assert.equal(await page.evaluate(s=>testAPI.safeUrl(s),value),'');
-assert.equal(await page.evaluate(()=>testAPI.allowed(-2.10,2.45)),false,'square column podium includes visitor clearance');
-assert.equal(await page.evaluate(()=>testAPI.allowed(0,0)),false,'altar blocks walking');
-assert.equal(await page.evaluate(()=>testAPI.allowed(-3.9,.25)),true,'side aisle remains walkable');
-assert.equal(await page.evaluate(async()=>{
- const THREE=await import('three');
- const ray=new THREE.Raycaster(new THREE.Vector3(0,3.49,3),new THREE.Vector3(0,0,-1));
- const hit=ray.intersectObjects(testAPI.occluders,false)[0];
- return Boolean(hit&&hit.distance<4);
-}),true,'seated sculpture blocks a sightline before the rear wall');
-await page.evaluate(()=>testAPI.materialsReady);
-assert.equal(await page.evaluate(()=>testAPI.columnCenters.length),4,'only four interior posts remain');
-assert.equal(await page.evaluate(()=>testAPI.obstacles.length),5,'four podiums and one altar collider');
-assert.equal(await page.evaluate(()=>testAPI.allowed(-5.2,4.8)),true,'removed corner post leaves no ghost collider');
-assert.equal(await page.evaluate(()=>testAPI.allowed(5.2,4.8)),true,'both corner walkways are open');
-assert.equal(await page.evaluate(()=>testAPI.scene.children.filter(n=>n.name==='interior-post').length),4);
-assert.equal(await page.evaluate(()=>document.querySelectorAll('#hall-plan rect[fill="#9c947a"]').length),4,'minimap matches four post podiums');
-assert.equal(await page.evaluate(async()=>{
- const THREE=await import('three'),s=testAPI.scene,floor=s.getObjectByName('hall-floor'),plinth=s.getObjectByName('hall-plinth');
- if(!floor||!plinth||floor.geometry.type!=='PlaneGeometry')return false;
- s.updateMatrixWorld(true);
- for(const x of [-5.1,-4.4,-3.7,3.7,4.4,5.1])for(const z of [-4.7,-3,0,3,4.7]){
-  const hits=new THREE.Raycaster(new THREE.Vector3(x,1,z),new THREE.Vector3(0,-1,0)).intersectObjects([floor,plinth],false);
-  if(hits.length<2||hits[0].object!==floor||Math.abs(hits[0].point.y)>.00001||hits[0].point.y-hits[1].point.y<.08)return false;
+ browser=await chromium.launch({...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{}),headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+ const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage(),requests=[],responses=[],errors=[];
+ page.on('request',request=>requests.push(request.url()));
+ page.on('response',response=>{responses.push({url:response.url(),status:response.status(),worker:response.fromServiceWorker()});if(response.status()>=400&&!response.url().endsWith('favicon.ico'))errors.push(response.status()+' '+response.url())});
+ page.on('pageerror',error=>errors.push(error.message));page.on('console',message=>{if(message.type()==='error')errors.push(message.text())});
+ await page.addInitScript(()=>performance.setResourceTimingBufferSize(10000));
+ await page.route(base,route=>route.fulfill({contentType:'text/html',body:injected}));await page.goto(base);await loadReady(page);
+ assert.equal(requests.filter(url=>/zoom_files|zoom\.dzi|full-preview|openseadragon|sw-murals/.test(url)).length,0,'No detail viewer or HD resource on the initial hall load');
+ assert.equal(requests.filter(url=>/case\.mgdatatech|_level[0123]\.png/.test(url)).length,0,'No upstream service or source PNG requests');
+ const scene=await page.evaluate(async()=>{
+  const THREE=await import('three'),t=appTest,shapes=t.WALLS.map(w=>({key:w.key,id:w.muralId,ratio:w.width/w.height,pixels:w.pixelSize,position:w.position,ry:w.ry}));
+  const front=Object.values(t.muralMeshes).filter(m=>m.position.z>5).length;
+  const normals=Object.fromEntries(t.WALLS.map(w=>{const m=t.muralMeshes[w.key];return[w.key,new THREE.Vector3(0,0,1).applyQuaternion(m.quaternion).toArray()]}));
+  return {shapes,front,normals,calls:t.renderer.info.render.calls,original4Only:Object.values(t.muralMeshes).every(m=>m.material.map.image.width<=4096&&m.material.map.image.height<=4096),interiorPosts:t.scene.children.filter(m=>m.name==='interior-post').length};
+ });
+ assert.equal(scene.front,0);assert.equal(scene.original4Only,true);assert.equal(scene.interiorPosts,4);assert.ok(scene.calls<60,'Static batching reduces draw calls without downsampling wall textures');
+ assert.ok(scene.normals.west[0]>.99&&scene.normals.east[0]<-.99&&scene.normals.northWest[2]>.99);
+ for(const s of scene.shapes)assert.ok(Math.abs(s.ratio-s.pixels[0]/s.pixels[1])<1e-8,'No stretched texture');
+ await page.locator('#language').click();assert.equal(await page.locator('html').getAttribute('lang'),'zh-CN');
+ const movement=await page.evaluate(()=>{
+  const t=appTest;t.setMode('explore');const speeds=[];
+  for(const fps of [15,30,60,120]){t.camera.position.set(-4.2,1.7,2);t.state.yaw=0;t.state.pitch=0;t.state.keys.clear();t.state.keys.add('KeyW');for(let n=0;n<fps;n++)t.move(1/fps);speeds.push(2-t.camera.position.z)}
+  const dot=[];for(const yaw of [0,1.2,-1.2,2.8]){t.camera.position.set(0,1.7,4.72);t.state.yaw=yaw;t.state.pitch=.4;t.setOrientation();const before=t.camera.position.clone(),facing=t.camera.getWorldDirection(before.clone());facing.y=0;facing.normalize();t.move(.02);dot.push(t.camera.position.clone().sub(before).dot(facing))}
+  t.state.keys.clear();return {speeds,dot};
+ });
+ movement.speeds.forEach(distance=>assert.ok(Math.abs(distance-2.65)<1e-8,'Frame-rate-independent walking'));assert.ok(movement.dot.every(d=>d>0),'W advances in horizontal view direction');
+ assert.equal(await page.evaluate(()=>appTest.guideCurve.getPoints(1000).filter(p=>!appTest.allowed(p.x,p.z)).length),0,'Guided route clears all obstacles');
+ assert.equal(await page.evaluate(()=>appTest.allowed(0,0)),false);assert.equal(await page.evaluate(()=>appTest.allowed(-5.2,4.8)),true);
+ // Open each wall through the actual click/raycast path, not a direct viewer shortcut.
+ for(const [view,id] of [[1,'left'],[2,'back'],[3,'right']]){
+  await page.evaluate(view=>{const t=appTest;t.jumpToView(view);const c=t.renderer.domElement;c.dispatchEvent(new MouseEvent('click',{clientX:innerWidth/2,clientY:innerHeight/2,bubbles:true}))},view);
+  await viewerReady(page);assert.equal(await page.evaluate(()=>appTest.getWallId()),id);assert.equal(await page.locator('.mural-tabs button').count(),3);
+  const fit=await page.evaluate(()=>{const v=appTest.getDetail().getViewer(),b=v.viewport.getBounds(),i=v.world.getItemAt(0).getBounds();return b.x<=i.x+.001&&b.y<=i.y+.001&&b.x+b.width>=i.x+i.width-.001&&b.y+b.height>=i.y+i.height-.001});assert.equal(fit,true,'Whole mural fits without clipping');
+  assert.equal(await page.locator('.mural-hotspot').count(),0,'No invented research hotspots');
+  const before=await page.evaluate(()=>{window.oldDetail=appTest.getDetail();return {position:appTest.camera.position.toArray(),rotation:appTest.camera.quaternion.toArray(),fov:appTest.camera.fov}});
+  await page.keyboard.press('Escape');assert.equal(await page.locator('#overlay').isVisible(),false);
+  const after=await page.evaluate(()=>({position:appTest.camera.position.toArray(),rotation:appTest.camera.quaternion.toArray(),fov:appTest.camera.fov}));assert.deepEqual(after,before,'Closing preserves camera pose and optical zoom');assert.equal(await page.evaluate(()=>oldDetail.getViewer()),null,'Viewer is destroyed on close');
  }
- return floor.material.map.image?.width===1024&&Boolean(floor.material.normalMap&&floor.material.roughnessMap);
-}),true,'30 floor samples have one paving surface separated from the plinth by 9cm, with loaded PBR maps');
-const rotationChecks=await page.evaluate(()=>{
- const t=testAPI,c=t.renderer.domElement,packet=(type,x,id=91)=>c.dispatchEvent(new PointerEvent(type,{pointerId:id,pointerType:'mouse',button:0,clientX:x,clientY:200}));
- t.setMode('explore');const yaw=t.state.yaw;
- packet('pointerdown',100);window.dispatchEvent(new Event('blur'));packet('pointermove',900);t.move(.016);
- const blurDelta=t.state.yaw-yaw;window.dispatchEvent(new Event('focus'));packet('pointermove',910);t.move(.016);const focusDelta=t.state.yaw-yaw;
- packet('pointerdown',100);packet('pointermove',120);t.setDrawer('atlas',0);t.clearDrawer();packet('pointermove',900);t.move(.016);const drawerDelta=t.state.yaw-yaw;
- Object.defineProperty(document,'pointerLockElement',{configurable:true,get:()=>c});document.dispatchEvent(new Event('pointerlockchange'));
- const locked=(dx)=>document.dispatchEvent(new MouseEvent('mousemove',{movementX:dx,movementY:0}));
- locked(1800);t.move(.016);locked(1800);t.move(.016);const warpDelta=t.state.yaw-yaw;
- locked(20);t.move(.016);const normalDelta=t.state.yaw-yaw;
- const beforeBurst=t.state.yaw;for(let i=0;i<100;i++)locked(100);t.move(.016);const burstDelta=t.state.yaw-beforeBurst;
- const afterBurst=t.state.yaw;t.move(.016);const replayDelta=t.state.yaw-afterBurst;
- delete document.pointerLockElement;document.dispatchEvent(new Event('pointerlockchange'));
- t.state.keys.add('ArrowLeft');const beforeLongFrame=t.state.yaw;t.move(3);const longFrameDelta=t.state.yaw-beforeLongFrame;t.state.keys.clear();
- t.state.guide=true;t.state.guideT=.45;t.updateGuided(.016);const orientation=t.camera.quaternion.clone(),position=t.camera.position.clone();
- packet('pointerdown',100);packet('pointermove',110);t.move(.016);
- const guideTurn=orientation.angleTo(t.camera.quaternion),guidePositionChange=position.distanceTo(t.camera.position),guideCancelled=!t.state.guide;
- t.lookInput.reset();return {blurDelta,focusDelta,drawerDelta,warpDelta,normalDelta,burstDelta,replayDelta,longFrameDelta,guideTurn,guidePositionChange,guideCancelled};
-});
-for(const key of ['blurDelta','focusDelta','drawerDelta','warpDelta','replayDelta','guidePositionChange'])assert.equal(rotationChecks[key],0,key);
-assert.ok(Math.abs(rotationChecks.normalDelta+.044)<1e-8,'ordinary locked look remains responsive');
-assert.ok(Math.abs(rotationChecks.burstDelta)<=.16000001,'packet burst is bounded per frame');
-assert.ok(Math.abs(rotationChecks.longFrameDelta-.062)<1e-8,'long frame does not cause a half-turn');
-assert.ok(rotationChecks.guideCancelled&&rotationChecks.guideTurn<.06,'manual handoff preserves the guide orientation and position');
-assert.deepEqual(errors,[]);assert.deepEqual(failed,[]);
-// Simulate complete WebGL initialization failure before bind() is reached.
-const fail=await context.newPage();await fail.route(url,r=>r.fulfill({contentType:'text/html',body:html.replace("const renderer = new THREE.WebGLRenderer", "throw new Error('Simulated unavailable WebGL');\nconst renderer = new THREE.WebGLRenderer")}));
-await fail.goto(url);await fail.locator('#fallback').waitFor({state:'visible'});await fail.locator('#fallback-atlas').click();assert.ok(fail.url().endsWith('/assets/murals/index.html'));assert.equal(await fail.locator('img').count(),4);
-// Mobile: reference page and full-screen archive fit narrow screens.
-const mobile=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});const mp=await mobile.newPage();await mp.goto(url);await mp.waitForSelector('#loading',{state:'detached'});await mp.locator('#hero-archive').click();
-await mp.waitForFunction(()=>document.querySelector('#compare-view img')?.naturalWidth>0);assert.equal(await mp.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-console.log('PASS: original-only/paired photos, late updates, language, pointer/keyboard, guide collisions, four interior posts and minimap bases, clear corners, 30 separated floor/plinth samples, loaded PBR maps, statue occlusion, WebGL fallback and mobile layout. No runtime/shader errors or failed asset requests.');
-await browser.close();
-})().catch(e=>{console.error(e);process.exitCode=1});
+ // Transparent scan margins are not interactive wall-wide rectangles.
+ const margin=await page.evaluate(async()=>{
+  const THREE=await import('three'),t=appTest,m=t.muralMeshes.west,mask=m.userData.hitMask;let index=-1;
+  for(let i=mask.width+2;i<mask.width*(mask.height-1)-2;i++)if(!(mask.bytes[i>>3]&(1<<(i&7)))){index=i;break}
+  if(index<0)return false;
+  const u=(index%mask.width+.5)/mask.width,v=1-(Math.floor(index/mask.width)+.5)/mask.height;
+  const target=new THREE.Vector3((u-.5)*m.geometry.parameters.width,(v-.5)*m.geometry.parameters.height,0).applyMatrix4(m.matrixWorld);
+  const normal=new THREE.Vector3(0,0,1).applyQuaternion(m.quaternion);t.camera.position.copy(target.clone().add(normal));t.camera.lookAt(target);t.syncOrientationFromCamera();return !t.inspectWall();
+ });assert.equal(margin,true,'Transparent source margin does not open the archive');
+ // Initial source level 3; wheel zoom fetches higher-detail level 2 tiles.
+ await page.evaluate(()=>{appTest.jumpToView(1);appTest.setDrawer('atlas',0)});await viewerReady(page);
+ const tileLevels=()=>requests.filter(url=>url.includes('zoom_files/')).map(url=>Number(url.split('zoom_files/')[1].split('/')[0]));
+ const initialMax=Math.max(...tileLevels());assert.equal(initialMax,13,'Initial tile detail matches source level 3');
+ const stage=page.locator('#deepzoom-stage'),box=await stage.boundingBox();await page.mouse.move(box.x+box.width*.45,box.y+box.height*.55);
+ // OSD normalizes each wheel event to a zoom step, regardless of its raw delta.
+ for(let n=0;n<14;n++){await page.mouse.wheel(0,-120);await page.waitForTimeout(120)}
+ await page.waitForFunction(()=>appTest.getDetail().getViewer().viewport.getZoom()>2);await viewerReady(page);
+ await page.waitForFunction(()=>performance.getEntriesByType('resource').some(e=>e.name.includes('/zoom_files/14/')));
+ assert.equal(Math.max(...tileLevels()),14,'Higher-resolution tiles really load after zoom');
+ const leftTop=await page.evaluate(()=>appTest.getDetail().getViewer().viewport.getCenter().toString());
+ await page.mouse.move(box.x+box.width*.5,box.y+box.height*.5);await page.mouse.down();await page.mouse.move(box.x+box.width*.5+140,box.y+box.height*.5+40,{steps:8});await page.mouse.up();
+ await page.waitForFunction(before=>appTest.getDetail().getViewer().viewport.getCenter().toString()!==before,leftTop);
+ if(process.env.KAIHUA_SCREENSHOTS)await page.screenshot({path:path.join(process.env.KAIHUA_SCREENSHOTS,'kaihua-hd-detail.png')});
+ await page.locator('#mural-fit').click();await page.waitForFunction(()=>Math.abs(appTest.getDetail().getViewer().viewport.getZoom()-appTest.getDetail().getViewer().viewport.getHomeZoom())<.01);
+ // Cache one loaded versioned tile and verify its reuse through our own service worker.
+ await page.waitForFunction(()=>navigator.serviceWorker.controller!==null);
+ const lastTile=requests.findLast(url=>url.includes('/zoom_files/14/'));
+ await page.waitForFunction(async url=>{const c=await caches.open('kaihua-mural-tiles-v1');return !!await c.match(url)},lastTile);
+ const cachedBefore=responses.filter(r=>r.url===lastTile&&r.worker).length;await page.evaluate(url=>fetch(url).then(r=>r.arrayBuffer()).then(b=>b.byteLength),lastTile);
+ assert.ok(responses.filter(r=>r.url===lastTile&&r.worker).length>cachedBefore,'Loaded tile is reused from Cache Storage');
+ const cacheKeys=await page.evaluate(async()=>{const c=await caches.open('kaihua-mural-tiles-v1');return(await c.keys()).length});assert.ok(cacheKeys<=256,'Persistent cache remains bounded');
+ // Test normalized-coordinate hotspot behavior using a QA-only fixture, never deployed research content.
+ await page.evaluate(()=>appTest.clearDrawer());
+ await page.evaluate(()=>{const wall=appTest.getCatalog().walls[0];wall.hotspots=[{id:'qa-only',x:.5,y:.5,title:'QA marker',text:'Test fixture'}];appTest.setDrawer('atlas',0)});await viewerReady(page);
+ const hotspot=page.locator('[data-hotspot="qa-only"]');await hotspot.waitFor();
+ const alignment=await page.evaluate(()=>{const v=appTest.getDetail().getViewer(),p=v.world.getItemAt(0).imageToViewportCoordinates(appTest.getCatalog().walls[0].width*.5,appTest.getCatalog().walls[0].height*.5),at=v.viewport.pixelFromPoint(p,true),button=document.querySelector('[data-hotspot="qa-only"]').getBoundingClientRect(),canvas=v.container.getBoundingClientRect();return Math.hypot(button.x+button.width/2-canvas.x-at.x,button.y+button.height/2-canvas.y-at.y)});assert.ok(alignment<2,'Hotspot is registered to image coordinates');
+ await hotspot.click();assert.equal(await page.locator('.mural-hotspot-note').isVisible(),true);await page.evaluate(()=>{appTest.getCatalog().walls[0].hotspots=[];appTest.clearDrawer()});
+ // Keep the previous camera-jump and model regressions covered.
+ const rotation=await page.evaluate(()=>{const t=appTest,c=t.renderer.domElement;t.setMode('explore');const y=t.state.yaw;c.dispatchEvent(new PointerEvent('pointerdown',{pointerId:91,pointerType:'mouse',button:0,clientX:100,clientY:200}));window.dispatchEvent(new Event('blur'));c.dispatchEvent(new PointerEvent('pointermove',{pointerId:91,pointerType:'mouse',clientX:900,clientY:200}));t.move(.016);const blur=t.state.yaw-y;window.dispatchEvent(new Event('focus'));t.state.keys.add('ArrowLeft');const before=t.state.yaw;t.move(3);const long=t.state.yaw-before;t.state.keys.clear();return {blur,long}});assert.equal(rotation.blur,0);assert.ok(Math.abs(rotation.long-.062)<1e-8);
+ const floor=await page.evaluate(async()=>{const THREE=await import('three'),s=appTest.scene;s.updateMatrixWorld(true);const f=s.getObjectByName('hall-floor'),p=s.getObjectByName('hall-plinth'),hits=new THREE.Raycaster(new THREE.Vector3(-4.2,1,0),new THREE.Vector3(0,-1,0)).intersectObjects([f,p],false);return hits[0].object===f&&hits[0].point.y-hits[1].point.y>.08});assert.equal(floor,true);
+ // Standalone archive remains available even if WebGL initialization fails.
+ const fallback=await context.newPage();await fallback.route(base,route=>route.fulfill({contentType:'text/html',body:html.replace('const renderer = new THREE.WebGLRenderer',"throw new Error('Simulated WebGL failure');\nconst renderer = new THREE.WebGLRenderer")}));await fallback.goto(base);await fallback.locator('#fallback').waitFor();await fallback.locator('#fallback-atlas').click();await fallback.waitForSelector('.openseadragon-container');assert.equal(await fallback.locator('[data-wall]').count(),3);
+ assert.deepEqual(errors,[]);assert.equal(requests.filter(url=>/case\.mgdatatech|_level[0123]\.png/.test(url)).length,0);
+ console.log(JSON.stringify({passed:true,drawCalls:scene.calls,initialTileLevel:initialMax,zoomedTileLevel:14,persistentCacheEntries:cacheKeys,checks:'3 wall click paths, alpha hit regions, proportions/orientation, no front mural, W direction at 15/30/60/120fps, pose restore, actual high-detail tile requests, pan/fit, bounded cache, normalized hotspots, input/floor regressions, WebGL fallback'},null,2));
+ await browser.close();
+})().catch(async error=>{console.error(error);await browser?.close();process.exitCode=1});

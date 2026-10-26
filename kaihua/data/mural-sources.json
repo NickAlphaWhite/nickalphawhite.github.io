@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "background": {"minimumChannel": 244,"maximumChroma": 16,"method": "edge-connected-only"},
+  "walls": [
+    {
+      "id":"left","assetId":"b94259ca-f3f6-44a2-8ce4-b09a81d062c6","filePrefix":"left_wall_01",
+      "label":{"zh":"左壁","en":"Left wall"},
+      "sceneRegions":[{"key":"west","kind":"mural","crop":[0,0.274,1,0.726],"position":[-5.73,2.45,-0.05],"rotationY":1.5707963267948966,"fit":[11.25,2.95]}],
+      "frieze":{"crop":[0,0.060,1,0.145],"position":[-5.71,4.28,-0.05],"rotationY":1.5707963267948966,"fit":[11.25,0.54]},
+      "hotspots":[]
+    },
+    {
+      "id":"back","assetId":"1a82a6f5-c2b1-43a4-ac2a-a7e2440bdd65","filePrefix":"back_wall_02",
+      "label":{"zh":"后壁","en":"Back wall"},
+      "sceneRegions":[
+        {"key":"northWest","kind":"mural","crop":[0.003,0.282,0.284,0.718],"position":[-3.28,2.45,-5.51],"rotationY":0,"fit":[4.35,2.95]},
+        {"key":"northEast","kind":"mural","crop":[0.708,0.289,0.289,0.711],"position":[3.28,2.45,-5.51],"rotationY":0,"fit":[4.35,2.95]}
+      ],
+      "frieze":{"crop":[0,0.052,1,0.130],"position":[0,4.28,-5.49],"rotationY":0,"fit":[11.25,0.54]},
+      "hotspots":[]
+    },
+    {
+      "id":"right","assetId":"bb25092e-7bac-405b-87c9-015b60c6d1c0","filePrefix":"right_wall_01",
+      "label":{"zh":"右壁","en":"Right wall"},
+      "sceneRegions":[{"key":"east","kind":"mural","crop":[0,0.294,1,0.706],"position":[5.73,2.45,-0.05],"rotationY":-1.5707963267948966,"fit":[11.25,2.95]}],
+      "frieze":{"crop":[0,0.070,1,0.145],"position":[5.71,4.28,-0.05],"rotationY":-1.5707963267948966,"fit":[11.25,0.54]},
+      "hotspots":[]
+    }
+  ]
+}
