@@ -117,3 +117,13 @@ Collision footprints now include the square column podiums and altar clearance; 
 Serve the repository root with `python -m http.server 8080 --bind 127.0.0.1`. In a separate tool environment install Playwright (`npm install playwright`, `npx playwright install chromium`) and run `node kaihua/tests/browser.cjs`. Set `CHROME_PATH` to use an installed Chrome instead of the downloaded browser, and `KAIHUA_TEST_URL` to test another server path. The test runner must be able to resolve the Playwright package. It injects its test API into the HTTP response only; the production page exports no debug state.
 
 Checks cover original-only images, late-image updates, missing images, paired comparison, language switching, keyboard/pointer inspection, focus handling, 1,001 tour-path samples, square podium/altar collisions, sculpture occlusion, WebGL failure/static fallback, and a 390-pixel mobile archive layout. Desktop reference renders were visually checked from the entrance, side aisle and facade.
+
+## V1.6 — Stable paving, open corners and worn surface materials
+
+The flickering paving was a geometry bug: both the masonry plinth and the top of the thin paving box ended at y=0. The paving is now one upward-facing plane at y=0, and the structural plinth ends at y=-0.09. No displacement or polygon-offset workaround is used. Thirty downward ray samples verify the separated surfaces.
+
+Removed the two extra interior corner posts at (+/-5.20, 4.8), including their podiums, collision footprints and generated plan symbols. Four interior posts remain around the altar. Exterior facade posts remain outside the south wall.
+
+Generic CC0 scans from Poly Haven replace the line-drawn wood and repeated flat brick graphics. Diffuse, OpenGL normal and roughness maps are bundled locally; credits and source links are in assets/materials/CREDITS.md. The source JPGs are unchanged. Runtime materials lower saturation, calibrate dusty-grey albedo, set world-scale masonry UVs and use restrained normal strength. Stone caps are thinner, plaster has subtle weathering, the red altar top has a cloth weave, and window daylight is less yellow and less harsh. These generic surface scans are not site documentation. The Buddha and the mural reference samples remain simplified and are not presented as photographic reconstruction.
+
+The loading overlay waits for local material readiness (with a five-second fallback). Browser checks now include four-post/minimap consistency, clear corner collisions, separated floor geometry, loaded material maps, and shader errors. A visual check swept 60 moving views around the reported side aisle.

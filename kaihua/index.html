@@ -251,9 +251,9 @@ const camera = new THREE.PerspectiveCamera(64,window.innerWidth/window.innerHeig
 const scene = new THREE.Scene(); scene.background = new THREE.Color('#847b66'); scene.fog = new THREE.FogExp2('#a39880',.008);
 const renderer = new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.8));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;
-renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;$('webgl').appendChild(renderer.domElement);
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;$('webgl').appendChild(renderer.domElement);
 // Geometry, materials, daylight, occlusion and collision footprints share one model.
-const {occluders,obstacles,columnCenters}=buildHall(scene,renderer);
+const {occluders,obstacles,columnCenters,materialsReady}=buildHall(scene,renderer);
 
 function seeded(seed){return ()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}}
 function makeDiagram(key,aspect){
@@ -564,7 +564,13 @@ async function loadAssets(){
   }
  }catch(e){console.warn('Mural manifest could not be loaded',e)}
 }
-function init(){bind();applyLang();setHomeCamera();animate();loadAssets();setTimeout(()=>{$('loading').classList.add('done');setTimeout(()=>$('loading').remove(),450)},380)}
+function init(){
+ bind();applyLang();setHomeCamera();animate();loadAssets();
+ // Complete local material loading before revealing the hall; fallback maps work offline.
+ Promise.race([materialsReady,new Promise(resolve=>setTimeout(resolve,5000))]).then(()=>{
+  $('loading')?.classList.add('done');setTimeout(()=>$('loading')?.remove(),450);
+ });
+}
 init();
 } catch(error) { console.error(error); document.getElementById('loading')?.remove(); document.getElementById('fallback').hidden=false; }
 
