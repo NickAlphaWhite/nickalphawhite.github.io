@@ -2,7 +2,7 @@ const {chromium}=require('playwright');
 const fs=require('fs'),assert=require('node:assert/strict');
 const url=process.env.KAIHUA_TEST_URL||'http://127.0.0.1:8080/kaihua/';
 const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
-const inject=html.replace(/init\(\);\r?\n\} catch\(error\)/,`window.testAPI={state,camera,setMode,setDrawer,clearDrawer,jumpToView,allowed,hitWall,inspectWall,guideCurve,safeUrl,renderDrawer,muralMeshes,WALLS,occluders,obstacles,renderer,scene,columnCenters,materialsReady};init();\n} catch(error)`);
+const inject=html.replace(/init\(\);\r?\n\} catch\(error\)/,`window.testAPI={state,camera,setMode,setDrawer,clearDrawer,jumpToView,allowed,hitWall,inspectWall,guideCurve,safeUrl,renderDrawer,muralMeshes,WALLS,occluders,obstacles,renderer,scene,columnCenters,materialsReady,lookInput,move,updateGuided};init();\n} catch(error)`);
 (async()=>{
 const browser=await chromium.launch({...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{}),headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 const context=await browser.newContext({viewport:{width:1440,height:900}});
@@ -41,6 +41,7 @@ await page.locator('canvas').dispatchEvent('pointerdown',{pointerType:'mouse',po
 await page.locator('canvas').dispatchEvent('pointermove',{pointerType:'mouse',pointerId:1,clientX:660,clientY:450});
 await page.locator('canvas').dispatchEvent('pointerup',{pointerType:'mouse',pointerId:1});
 await page.locator('canvas').dispatchEvent('click',{pointerType:'mouse',clientX:660,clientY:450});
+await page.waitForFunction(previous=>testAPI.state.yaw!==previous,yaw);
 assert.notEqual(await page.evaluate(()=>testAPI.state.yaw),yaw);
 assert.equal(await page.locator('#overlay').isVisible(),false);
 await page.evaluate(()=>testAPI.jumpToView(3));
@@ -73,6 +74,30 @@ assert.equal(await page.evaluate(async()=>{
  }
  return floor.material.map.image?.width===1024&&Boolean(floor.material.normalMap&&floor.material.roughnessMap);
 }),true,'30 floor samples have one paving surface separated from the plinth by 9cm, with loaded PBR maps');
+const rotationChecks=await page.evaluate(()=>{
+ const t=testAPI,c=t.renderer.domElement,packet=(type,x,id=91)=>c.dispatchEvent(new PointerEvent(type,{pointerId:id,pointerType:'mouse',button:0,clientX:x,clientY:200}));
+ t.setMode('explore');const yaw=t.state.yaw;
+ packet('pointerdown',100);window.dispatchEvent(new Event('blur'));packet('pointermove',900);t.move(.016);
+ const blurDelta=t.state.yaw-yaw;window.dispatchEvent(new Event('focus'));packet('pointermove',910);t.move(.016);const focusDelta=t.state.yaw-yaw;
+ packet('pointerdown',100);packet('pointermove',120);t.setDrawer('atlas',0);t.clearDrawer();packet('pointermove',900);t.move(.016);const drawerDelta=t.state.yaw-yaw;
+ Object.defineProperty(document,'pointerLockElement',{configurable:true,get:()=>c});document.dispatchEvent(new Event('pointerlockchange'));
+ const locked=(dx)=>document.dispatchEvent(new MouseEvent('mousemove',{movementX:dx,movementY:0}));
+ locked(1800);t.move(.016);locked(1800);t.move(.016);const warpDelta=t.state.yaw-yaw;
+ locked(20);t.move(.016);const normalDelta=t.state.yaw-yaw;
+ const beforeBurst=t.state.yaw;for(let i=0;i<100;i++)locked(100);t.move(.016);const burstDelta=t.state.yaw-beforeBurst;
+ const afterBurst=t.state.yaw;t.move(.016);const replayDelta=t.state.yaw-afterBurst;
+ delete document.pointerLockElement;document.dispatchEvent(new Event('pointerlockchange'));
+ t.state.keys.add('ArrowLeft');const beforeLongFrame=t.state.yaw;t.move(3);const longFrameDelta=t.state.yaw-beforeLongFrame;t.state.keys.clear();
+ t.state.guide=true;t.state.guideT=.45;t.updateGuided(.016);const orientation=t.camera.quaternion.clone(),position=t.camera.position.clone();
+ packet('pointerdown',100);packet('pointermove',110);t.move(.016);
+ const guideTurn=orientation.angleTo(t.camera.quaternion),guidePositionChange=position.distanceTo(t.camera.position),guideCancelled=!t.state.guide;
+ t.lookInput.reset();return {blurDelta,focusDelta,drawerDelta,warpDelta,normalDelta,burstDelta,replayDelta,longFrameDelta,guideTurn,guidePositionChange,guideCancelled};
+});
+for(const key of ['blurDelta','focusDelta','drawerDelta','warpDelta','replayDelta','guidePositionChange'])assert.equal(rotationChecks[key],0,key);
+assert.ok(Math.abs(rotationChecks.normalDelta+.044)<1e-8,'ordinary locked look remains responsive');
+assert.ok(Math.abs(rotationChecks.burstDelta)<=.16000001,'packet burst is bounded per frame');
+assert.ok(Math.abs(rotationChecks.longFrameDelta-.062)<1e-8,'long frame does not cause a half-turn');
+assert.ok(rotationChecks.guideCancelled&&rotationChecks.guideTurn<.06,'manual handoff preserves the guide orientation and position');
 assert.deepEqual(errors,[]);assert.deepEqual(failed,[]);
 // Simulate complete WebGL initialization failure before bind() is reached.
 const fail=await context.newPage();await fail.route(url,r=>r.fulfill({contentType:'text/html',body:html.replace("const renderer = new THREE.WebGLRenderer", "throw new Error('Simulated unavailable WebGL');\nconst renderer = new THREE.WebGLRenderer")}));
