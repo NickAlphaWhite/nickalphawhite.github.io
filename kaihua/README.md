@@ -83,3 +83,17 @@ The hall is a **research prototype**, not a measured restoration and not an affi
 
 ### Quality checks
 The inline JavaScript module was syntax-checked. The four observation stations were checked against the simplified collision boundaries and the world-to-plan mapping; their forward directions align with the W-key movement vector. Browser-level interaction and GitHub Pages propagation still require verification on a real client.
+
+## V1.3 — Full-screen mural detail, retaining 3D wall interaction
+
+The archive and evidence interface now occupies the **entire viewport**; the right sidebar is removed.
+
+- **During hall exploration**, click a visible mural plane or press `E` while aiming at it. A shared raycast opens the full-screen details for that exact wall section.
+- The raycast checks the existing solid columns and altar for obstructions: clicking a mural behind a pillar does not bypass the geometry.
+- Full-screen detail includes the selected wall title, theme, archival note and a source/restoration comparison that activates only when real files are provided.
+- Tabs inside the full-screen detail switch wall sections. The "View this wall in the hall" button travels to a relevant hall location.
+- **Back to the hall** (or `Escape`) closes the detail and returns to the saved camera position and orientation. The browser cursor is released while reading; click the hall again to resume mouse look.
+- Touchscreen taps raycast from the tapped screen coordinates; drag gestures still rotate the camera.
+- The schematic architectural model and unsupplied historical images are still labelled as such.
+
+Latest checks: JavaScript source parses, all primary wall-entry paths call the shared occlusion-aware hit test, and the CSS/markup expand to 100% viewport width. Full interactive browser testing and GitHub Pages propagation remain unverified.
