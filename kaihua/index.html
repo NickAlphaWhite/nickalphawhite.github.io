@@ -170,10 +170,11 @@
   <footer class="footline"><span>© 2026 · KAIHUA SPATIAL STUDY</span><span id="footnote">Interpretive prototype · not a measured reconstruction</span></footer>
   <script type="module">
 import * as THREE from 'three';
+import {buildHall} from './assets/hall.js';
 try {
 
 /* KAIHUA / A WALKABLE IMAGE
-   Geometry is an interpretive spatial diagram, NOT a dimensional survey.
+   Geometry follows supplied reference photographs; dimensions and sculpture are interpretive, NOT surveyed or scanned.
    Real mural scans are loaded only when supplied via assets/murals/manifest.json.
    The SNAKE restoration workflow is an offline research process, not a browser filter.
 */
@@ -234,10 +235,10 @@ const content = {
   }
 };
 const WALLS = [
-  {id:'west',key:'west',width:9.45,height:2.95,x:-5.65,y:2.45,z:-.05,ry:Math.PI/2,target:[-4.2,1.72,.3]},
-  {id:'east',key:'east',width:9.45,height:2.95,x:5.65,y:2.45,z:-.05,ry:-Math.PI/2,target:[4.2,1.72,.3]},
-  {id:'northWest',key:'northWest',width:4.35,height:2.95,x:-3.28,y:2.45,z:-4.95,ry:0,target:[-3.3,1.72,-3.9]},
-  {id:'northEast',key:'northEast',width:4.35,height:2.95,x:3.28,y:2.45,z:-4.95,ry:0,target:[3.3,1.72,-3.9]}
+  {id:'west',key:'west',width:9.45,height:2.95,x:-5.73,y:2.45,z:-.05,ry:Math.PI/2,target:[-4.2,1.72,.3]},
+  {id:'east',key:'east',width:9.45,height:2.95,x:5.73,y:2.45,z:-.05,ry:-Math.PI/2,target:[4.2,1.72,.3]},
+  {id:'northWest',key:'northWest',width:4.35,height:2.95,x:-3.28,y:2.45,z:-5.51,ry:0,target:[-3.3,1.72,-3.9]},
+  {id:'northEast',key:'northEast',width:4.35,height:2.95,x:3.28,y:2.45,z:-5.51,ry:0,target:[3.3,1.72,-3.9]}
 ];
 const sources = [
  'https://www.sxgp.gov.cn/zjgp/fjms_425/202511/t20251128_2291193.shtml',
@@ -247,43 +248,12 @@ const sources = [
 ];
 const state = {lang:'en',mode:'home',activeWall:0,mouseDown:false,dragged:false,guide:false,guidePaused:false,guideT:0,yaw:0,pitch:0,assets:{},positions:new Set(),keys:new Set(),touch:new Set(),available:{}};
 const camera = new THREE.PerspectiveCamera(64,window.innerWidth/window.innerHeight,.08,100);
-const scene = new THREE.Scene(); scene.background = new THREE.Color('#161e18'); scene.fog = new THREE.FogExp2('#161e18',.024);
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#847b66'); scene.fog = new THREE.FogExp2('#a39880',.008);
 const renderer = new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.8));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.52;
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.8));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;$('webgl').appendChild(renderer.domElement);
-const hemi=new THREE.HemisphereLight(0xbcc6ad,0x4e4433,1.5);scene.add(hemi);
-const sun=new THREE.DirectionalLight(0xe8c69a,2.1);sun.position.set(2,7,7);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-12;sun.shadow.camera.right=12;sun.shadow.camera.top=12;sun.shadow.camera.bottom=-12;sun.shadow.bias=-.001;scene.add(sun);
-const glow=new THREE.PointLight(0xf2cb86,25,12,2);glow.position.set(0,3.7,3.2);scene.add(glow);
-const occluders=[]; // Only pillars and altar volumes interrupt the sightline
-const stone=new THREE.MeshStandardMaterial({color:0x817a65,roughness:1});
-const timber=new THREE.MeshStandardMaterial({color:0x403124,roughness:.89});
-const timberTrim=new THREE.MeshStandardMaterial({color:0x6d4c30,roughness:.92});
-const plaster=new THREE.MeshStandardMaterial({color:0x928672,roughness:1});
-const plasterDark=new THREE.MeshStandardMaterial({color:0x625a4b,roughness:1});
-const metal=new THREE.MeshStandardMaterial({color:0x9b835c,roughness:.95});
-function block(x,y,z,w,h,d,mat=timber,shadow=true){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=shadow;m.receiveShadow=true;scene.add(m);return m;}
-// Schematic 3-bay hall with a south entrance and central altar.
-block(0,-.14,0,12,.28,11.5,stone,false);
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(300,300),new THREE.MeshStandardMaterial({color:0x242a21,roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-.3;ground.receiveShadow=true;scene.add(ground);
-const tiles=new THREE.Group();scene.add(tiles);
-for(let x=-5.8;x<5.8;x+=1.45){for(let z=-5.4;z<5.5;z+=1.35){const lines=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(1.4,1.29)),new THREE.LineBasicMaterial({color:0x645c4b,transparent:true,opacity:.23}));lines.rotation.x=-Math.PI/2;lines.position.set(x+.71,.005,z+.65);tiles.add(lines)}}
-// Wall segments; the north wall's central opening is intentional.
-block(-5.95,2.55,0,.22,5.1,11.5,plaster);block(5.95,2.55,0,.22,5.1,11.5,plaster);
-block(-3.42,2.55,-5.7,5.16,5.1,.22,plaster);block(3.42,2.55,-5.7,5.16,5.1,.22,plaster);block(0,4.65,-5.7,1.65,.9,.22,plaster);
-block(-3.55,2.55,5.7,4.9,5.1,.23,plasterDark);block(3.55,2.55,5.7,4.9,5.1,.23,plasterDark);block(0,4.6,5.7,2.2,1,.23,plasterDark);
-// Architectural trim & front aperture.
-for(const x of [-5.82,5.82]){block(x,4.9,0,.28,.25,11.52,timber);block(x,1.0,0,.10,.14,11.3,timberTrim)}
-for(const z of [-5.54,5.54]){block(0,4.8,z,12,.27,.36,timber);for(const x of [-5.55,-1.05,1.05,5.55])block(x,2.6,z,.16,5.1,.30,timber)}
-for(const z of [-5.15,-2.65,0,2.65,5.15])block(0,5.22,z,12,.22,.22,timber);
-for(const x of [-5.55,-3.6,-1.1,1.1,3.6,5.55])block(x,5.42,0,.24,.22,11.55,timber);
-block(0,5.66,0,12,.24,11.6,timber,false);
-// Six columns: four immediately around the altar and two at the south side bays.
-const columnCenters=[[-2.72,-2.60],[2.72,-2.60],[-2.72,2.45],[2.72,2.45],[-5.20,4.8],[5.20,4.8]];
-for(let i=0;i<columnCenters.length;i++){let [x,z]=columnCenters[i];const geometry=(i===0||i===1)?new THREE.CylinderGeometry(.25,.29,4.7,16):new THREE.CylinderGeometry(.27,.30,4.7,8);const col=new THREE.Mesh(geometry,timber);col.position.set(x,2.35,z);col.castShadow=true;col.receiveShadow=true;scene.add(col);occluders.push(col);block(x,4.78,z,.72,.21,.72,timberTrim);block(x,.15,z,.54,.29,.54,stone)}
-occluders.push(block(0,.42,-.1,4.54,.84,4.00,stone));occluders.push(block(0,.88,-.1,4.1,.09,3.62,plasterDark));occluders.push(block(0,1.16,-.27,3.4,.48,3.02,new THREE.MeshStandardMaterial({color:0x524738,roughness:1})));
-for(const x of [-1.0,0,1.0]){block(x,1.47,-.6,.57,.20,.80,timberTrim)}
-// A restrained abstract altar volume; not a claim about historical sculpture shapes.
-// No decorative wireframe edges around altar.
+// Geometry, materials, daylight, occlusion and collision footprints share one model.
+const {occluders,obstacles,columnCenters}=buildHall(scene,renderer);
 
 function seeded(seed){return ()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}}
 function makeDiagram(key,aspect){
@@ -308,13 +278,13 @@ for(let i=0;i<WALLS.length;i++){const w=WALLS[i],texture=makeDiagram(w.key,w.wid
 const dustPos=new Float32Array(270*3);const random=seeded(734);for(let i=0;i<270;i++){dustPos[3*i]=(random()-.5)*11;dustPos[3*i+1]=random()*5;dustPos[3*i+2]=(random()-.5)*10}const dustGeometry=new THREE.BufferGeometry();dustGeometry.setAttribute('position',new THREE.BufferAttribute(dustPos,3));const dust=new THREE.Points(dustGeometry,new THREE.PointsMaterial({size:.018,color:0xe8ccb0,transparent:true,opacity:.33,sizeAttenuation:true}));scene.add(dust);
 
 const raycaster=new THREE.Raycaster();const pointer=new THREE.Vector2(0,0);const clock=new THREE.Clock();
-const guidePoints=[new THREE.Vector3(0,1.7,4.7),new THREE.Vector3(-3.5,1.7,4.15),new THREE.Vector3(-3.9,1.7,.25),new THREE.Vector3(-3.65,1.7,-3.60),new THREE.Vector3(0,1.7,-4.33),new THREE.Vector3(3.68,1.7,-3.55),new THREE.Vector3(3.8,1.7,.9),new THREE.Vector3(2.75,1.7,4.3)];
+const guidePoints=[new THREE.Vector3(0,1.7,4.7),new THREE.Vector3(-3.5,1.7,4.15),new THREE.Vector3(-3.9,1.7,.25),new THREE.Vector3(-3.65,1.7,-3.60),new THREE.Vector3(0,1.7,-4.33),new THREE.Vector3(3.68,1.7,-3.55),new THREE.Vector3(3.8,1.7,.9),new THREE.Vector3(3.9,1.7,4.3)];
 const guideCurve=new THREE.CatmullRomCurve3(guidePoints,false,'catmullrom',.4);
-const guideLookPoints=[new THREE.Vector3(0,1.8,-.1),new THREE.Vector3(-4.2,2.2,-.2),new THREE.Vector3(-5.6,2.45,-.3),new THREE.Vector3(-5.5,2.45,-3.0),new THREE.Vector3(-3.1,2.45,-5.0),new THREE.Vector3(4.9,2.45,-4.0),new THREE.Vector3(5.6,2.45,-.15),new THREE.Vector3(4.8,2.4,-.2)];
+const guideLookPoints=[new THREE.Vector3(0,2.65,-.62),new THREE.Vector3(-4.2,2.2,-.2),new THREE.Vector3(-5.6,2.45,-.3),new THREE.Vector3(-5.5,2.45,-3.0),new THREE.Vector3(-3.1,2.45,-5.0),new THREE.Vector3(4.9,2.45,-4.0),new THREE.Vector3(5.6,2.45,-.15),new THREE.Vector3(4.8,2.4,-.2)];
 const guideLookCurve=new THREE.CatmullRomCurve3(guideLookPoints,false,'catmullrom',.25);
-const viewpoints=[{position:[0,1.7,4.72],target:[0,1.8,-.1]},{position:[-3.9,1.7,.25],target:[-5.65,2.45,-.25]},{position:[0,1.7,-4.25],target:[-3.3,2.45,-4.95]},{position:[3.9,1.7,.25],target:[5.65,2.45,-.25]}];
-function setHomeCamera(){camera.position.set(3.05,2.16,4.70);camera.lookAt(-.6,2.1,-1.3);state.yaw=0;state.pitch=0;}
-function setEntryCamera(){camera.position.set(0,1.7,4.72);state.yaw=0;state.pitch=0;setOrientation()}
+const viewpoints=[{position:[0,1.7,4.72],target:[0,2.65,-.62]},{position:[-3.9,1.7,.25],target:[-5.65,2.45,-.25]},{position:[0,1.7,-4.25],target:[-3.3,2.45,-4.95]},{position:[3.9,1.7,.25],target:[5.65,2.45,-.25]}];
+function setHomeCamera(){camera.position.set(3.65,2.10,4.95);camera.lookAt(-.35,2.80,-.62);state.yaw=0;state.pitch=0;}
+function setEntryCamera(){camera.position.set(0,1.7,4.72);state.yaw=0;state.pitch=.16;setOrientation()}
 function setOrientation(){camera.rotation.order='YXZ';camera.rotation.y=state.yaw;camera.rotation.x=state.pitch;camera.rotation.z=0}
 function jumpToView(index){
  const v=viewpoints[index];if(!v||state.mode!=='explore'||state.drawer)return;
@@ -417,7 +387,11 @@ function renderDrawer(){
 function safeUrl(s){return typeof s==='string'&&/^\.\/assets\/murals\/(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+\.(jpg|jpeg|png|webp)$/.test(s)?s:''}
 function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('visible');clearTimeout(toast.timeout);toast.timeout=setTimeout(()=>el.classList.remove('visible'),2600)}
 function showPositionInfo(){const t=content[state.lang];let x=camera.position.x,z=camera.position.z;let step=z<-2.8?2:x<-2.7?1:x>2.7?3:0;const [where,head,description]=t.steps[step];$('current-location').textContent=where;$('current-step').textContent=head;$('step-description').textContent=description;$('tour-progress-fill').style.width=`${(step+1)*25}%`;}
-function allowed(x,z){if(x<-4.6||x>4.6||z<-4.45||z>4.95)return false;if(Math.abs(x)<2.55&&z>-2.50&&z<2.35)return false;for(const [px,pz] of columnCenters)if(Math.hypot(x-px,z-pz)<.47)return false;return true;}
+function allowed(x,z){
+ const radius=.28;
+ if(x < -5.25 || x > 5.25 || z < -5.05 || z > 4.95)return false;
+ return !obstacles.some(o=>Math.abs(x-o.x)<o.halfX+radius&&Math.abs(z-o.z)<o.halfZ+radius);
+}
 function move(dt){let f=0,r=0;if(state.keys.has('KeyW')||state.keys.has('ArrowUp')||state.touch.has('forward'))f+=1;if(state.keys.has('KeyS')||state.keys.has('ArrowDown')||state.touch.has('back'))f-=1;if(state.keys.has('KeyA')||state.touch.has('left'))r-=1;if(state.keys.has('KeyD')||state.touch.has('right'))r+=1;if(state.keys.has('ArrowLeft'))state.yaw+=dt*1.24;if(state.keys.has('ArrowRight'))state.yaw-=dt*1.24;if(f||r){let l=Math.hypot(f,r);f/=l;r/=l;let s=Math.min(dt,.07)*2.65;const dx=(-Math.sin(state.yaw)*f+Math.cos(state.yaw)*r)*s;const dz=(-Math.cos(state.yaw)*f-Math.sin(state.yaw)*r)*s;let p=camera.position;if(allowed(p.x+dx,p.z))p.x+=dx;if(allowed(p.x,p.z+dz))p.z+=dz;}setOrientation();}
 function updateGuided(dt){
  if(!state.guide||state.guidePaused)return;
@@ -429,6 +403,21 @@ function updateGuided(dt){
  if(t>=1){state.guide=false;state.guidePaused=false;setOrientation();$('guide-label').textContent=content[state.lang].guide;updateMouseHint();toast(content[state.lang].toastEnd)}
 }
 function worldToPlan(x,z){return {x:110+x*15,y:109+z*14.75};}
+// Synchronize the drawing with the model instead of retaining old circular post bases.
+document.querySelectorAll('.plan-column').forEach(el=>el.remove());
+for(const o of obstacles.slice(0,-1)){
+ const p=worldToPlan(o.x-o.halfX,o.z-o.halfZ),r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+ for(const [key,value] of Object.entries({x:p.x,y:p.y,width:o.halfX*30,height:o.halfZ*29.5,fill:'#9c947a',stroke:'#d8be95','stroke-width':.7}))r.setAttribute(key,value);
+ $('hall-plan').insertBefore(r,$('map-user'));
+}
+const altarFootprint=obstacles.at(-1),altarCorner=worldToPlan(altarFootprint.x-altarFootprint.halfX,altarFootprint.z-altarFootprint.halfZ);
+const planAltar=document.querySelector('.plan-altar');
+for(const [key,value] of Object.entries({x:altarCorner.x,y:altarCorner.y,width:altarFootprint.halfX*30,height:altarFootprint.halfZ*29.5}))planAltar.setAttribute(key,value);
+for(const w of WALLS){
+ const node=$('plan-wall-'+w.key),a=worldToPlan(w.x,w.z);
+ if(w.key.startsWith('north')){const left=worldToPlan(w.x-w.width/2,w.z),right=worldToPlan(w.x+w.width/2,w.z);node.setAttribute('d',`M${left.x} ${left.y} H${right.x}`)}
+ else{const top=worldToPlan(w.x,w.z-w.width/2),bottom=worldToPlan(w.x,w.z+w.width/2);node.setAttribute('d',`M${top.x} ${top.y} V${bottom.y}`)}
+}
 $('map-route').setAttribute('d',guideCurve.getPoints(80).map((p,i)=>{const m=worldToPlan(p.x,p.z);return `${i?'L':'M'}${m.x.toFixed(1)},${m.y.toFixed(1)}`}).join(' '));
 function updateMap(){const {x,y}=worldToPlan(camera.position.x,camera.position.z);
  $('map-user').setAttribute('transform',`translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${(-THREE.MathUtils.radToDeg(state.yaw)).toFixed(2)})`);
