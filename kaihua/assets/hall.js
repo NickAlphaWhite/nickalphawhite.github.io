@@ -142,12 +142,12 @@ export function buildHall(scene, renderer) {
     box(x>0?5.73:-5.73,.39,0,.18,.78,11.35,brick);
     box(x>0?5.70:-5.70,.79,0,.19,.10,11.35,stone);
     box(x>0?5.72:-5.72,3.99,0,.24,.25,11.35,darkWood);
-    box(x>0?5.72:-5.72,4.25,0,.20,.28,11.35,painted);
+    box(x>0?5.72:-5.72,4.25,0,.20,.28,11.35,painted).name='wall-frieze-placeholder';
   }
   // The rear central door remains open; mural planes sit against the rear wall.
   for(const x of [-3.43,3.43]){
     box(x,2.38,-5.7,5.14,4.76,.25,plaster,true);box(x,.4,-5.51,5.1,.8,.16,brick);
-    box(x,4.24,-5.5,5.1,.28,.18,painted);
+    box(x,4.24,-5.5,5.1,.28,.18,painted).name='wall-frieze-placeholder';
   }
   box(0,4.1,-5.7,1.73,1.35,.25,darkWood,true);
   for(const x of [-.88,.88])box(x,1.74,-5.5,.17,3.48,.20,darkWood,true);
@@ -280,13 +280,33 @@ export function buildHall(scene, renderer) {
     const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(-r,y+.2,z+.22),new THREE.Vector3(-r*.35,y,z+.40),new THREE.Vector3(r*.70,y-.04,z+.29)]);
     const fold=new THREE.Mesh(new THREE.TubeGeometry(curve,20,.009,4,false),goldDark);scene.add(fold);
   }
-  // Layered coffer canopy hanging over the central statue, below the roof structure.
+  // Carry the coffer from a closed timber frame bearing on the four altar posts.
+  // This is a schematic connection, not a reconstruction of historic joinery.
+  const supportStart=scene.children.length;
+  for(const x of [-2.72,2.72])box(x,4.87,-.075,.25,.30,5.30,wood).name='canopy-bearing-side';
+  for(const zz of [-2.60,2.45])box(0,4.87,zz,5.69,.30,.25,wood).name='canopy-bearing-end';
+  for(const zz of [z-1.5,z+1.5]){
+    box(0,4.82,zz,5.69,.20,.20,wood).name='canopy-joist';
+    for(const x of [-1.75,1.75])box(x,4.53,zz,.14,.62,.14,wood).name='canopy-hanger';
+  }
+  const supports=new THREE.Group();supports.name='canopy-support';
+  const supportMembers=scene.children.slice(supportStart);scene.add(supports);supportMembers.forEach(member=>supports.add(member));
+  // Shelves and risers connect each tier; separate decorative rings looked suspended.
   for(let level=0;level<4;level++){
     const w=3.5-level*.38,d=3.0-level*.32,y=4.25+level*.18;
     for(const zz of [z-d/2,z+d/2])box(0,y,zz,w,.14,.16,level%2?painted:wood);
     for(const xx of [-w/2,w/2])box(xx,y,z,.16,.14,d,level%2?painted:wood);
+    if(level<3){
+      const nextW=w-.38,nextD=d-.32;
+      for(const side of [-1,1]){
+        box(0,y+.07,z+side*(d+nextD)/4,w,.06,.24,painted);
+        box(side*(w+nextW)/4,y+.07,z,.27,.06,d,painted);
+        box(0,y+.16,z+side*nextD/2,nextW,.18,.10,wood);
+        box(side*nextW/2,y+.16,z,.10,.18,nextD,wood);
+      }
+    }
   }
-  box(0,4.90,z,2.02,.08,1.72,painted);
+  box(0,4.88,z,2.36,.08,2.04,painted).name='canopy-cap';
   // Front approach steps, sill and simple facade beamwork visible through the entrance.
   for(let i=0;i<3;i++)box(0,-.10-i*.12,6.0+i*.40,2.5,.18,.6,stone);
   for(const x of [-5.65,-1.1,1.1,5.65])bracket(x,5.7);

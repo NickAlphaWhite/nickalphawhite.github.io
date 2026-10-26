@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#101711" />
   <meta name="description" content="Kaihua Temple — an interactive spatial study of murals, architecture, and the moving viewer." />
   <title>KAIHUA — A Walkable Image</title>
+  <link rel="stylesheet" href="./assets/mural-viewer.css">
   <style>
 :root{--bg:#0f1511;--paper:#e9e3d7;--dim:#b5b8ac;--gold:#b8a17d;--accent:#d5b893;--hair:rgba(243,237,218,.20);--serif:Georgia,'Songti SC','Noto Serif CJK SC',serif;--sans:'Helvetica Neue',Arial,'PingFang SC','Microsoft YaHei',sans}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--paper);font-family:var(--sans)}button,a{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:4px}button{color:inherit}#webgl{position:fixed;inset:0;z-index:0}#webgl canvas{display:block;width:100%;height:100%;touch-action:none}#vignette{position:fixed;inset:0;pointer-events:none;z-index:1;background:linear-gradient(90deg,rgba(11,18,15,.92) 0%,rgba(11,18,15,.80) 32%,rgba(11,18,15,.24) 67%,rgba(11,18,15,.18) 100%),radial-gradient(ellipse at 62% 46%,transparent 20%,rgba(4,8,6,.57) 100%);transition:background .5s}body.mode-explore #vignette{background:linear-gradient(180deg,rgba(7,12,9,.60),transparent 24%,transparent 68%,rgba(7,12,9,.72))}
@@ -95,6 +96,9 @@
  .hero h1{font-size:clamp(56px,6vw,96px)}.eyebrow{margin-bottom:24px}
  .hero-copy{margin-bottom:24px}.hero-foot{margin-top:24px}
 }
+.hall-zoom-tools{position:absolute;right:clamp(28px,4.5vw,78px);top:200px;display:flex;align-items:center;gap:1px;pointer-events:auto;background:#17221bdf;border:1px solid #a79a82}
+.hall-zoom-tools button{background:transparent;border:0;color:#e7ddc7;padding:9px 12px;font-size:12px}.hall-zoom-tools button:disabled{opacity:.35;cursor:default}
+@media(max-width:680px){.hall-zoom-tools{right:20px;top:215px}.image-zoom-tools{font-size:10px}}
 </style>
   <script type="importmap">
     {"imports":{"three":"./assets/vendor/three.module.min.js"}}
@@ -134,6 +138,7 @@
     <section id="explore-ui" class="explore-ui" hidden aria-label="Interactive temple walk">
       <div class="tour-head"><span class="section-overline">FIELD EXPERIENCE / 01</span><h2 id="tour-title">Walk through the image</h2><p id="tour-subtitle">Move, turn, and watch your line of sight change.</p></div>
       <div id="mouse-hint" class="mouse-hint" hidden>Click the hall to resume mouse look · Esc unlocks</div>
+      <div class="hall-zoom-tools" aria-label="Zoom"><button id="hall-zoom-out" type="button" aria-label="Zoom out">−</button><button id="hall-zoom-reset" type="button" aria-label="Reset zoom"><span id="hall-zoom-level">1.0×</span></button><button id="hall-zoom-in" type="button" aria-label="Zoom in">+</button></div>
       <div class="crosshair" aria-hidden="true"><i></i><i></i></div>
       <div class="look-label" id="look-label" hidden><span id="look-region">WEST WALL</span><small id="look-hint">Click or press E to examine ↗</small></div>
       <div class="walk-bottom">
@@ -172,6 +177,11 @@
 import * as THREE from 'three';
 import {buildHall} from './assets/hall.js';
 import {createLookControls} from './assets/look-controls.js';
+import {createHallZoom} from './assets/zoom-controls.js';
+import {loadMuralCatalog,visiblePixel} from './assets/mural-data.js';
+import {createMuralSurfaces} from './assets/mural-scene.js';
+import {createMuralViewer} from './assets/mural-viewer.js';
+import {batchStaticMeshes} from './assets/static-batch.js';
 try {
 
 /* KAIHUA / A WALKABLE IMAGE
@@ -185,8 +195,8 @@ const content = {
     nav:['Introduction','Walk the Hall','Wall Archive','Process & Evidence'], kicker:'SHANXI · CHINA · NORTHERN SONG',
     hero:'An image is<br><em>not a wall.</em>',sub:'重返开化 · 让壁画随脚步展开',
     copy:'The stories of Kaihua Temple were never meant to be seen all at once. Enter the hall, circle the altar, and discover what the walls reveal—and what the pillars conceal.',
-    enter:'Enter the Hall',archive:'Explore the archive',caption:'A study of architecture, pictorial sequence, and embodied viewing. Spatial model is interpretive; published photographs are illustrative references with unverified wall positions.',
-    tourTitle:'Walk through the image',tourSub:'Move, turn, and watch your line of sight change.',controls:'WASD walk · Mouse look · 1–4 viewpoints · Esc unlock · E examine',
+    enter:'Enter the Hall',archive:'Explore the archive',caption:'A study of architecture, pictorial sequence, and embodied viewing. Spatial model is interpretive; Three digitized walls are presented in their architectural setting; the geometry remains schematic.',
+    tourTitle:'Walk through the image',tourSub:'Move, turn, and watch your line of sight change.',controls:'WASD walk · Mouse look · Wheel zoom · 1–4 viewpoints · Esc unlock · E examine',
     guide:'Guided walk',pause:'Pause walk',resume:'Resume walk',reset:'Reset',exit:'Exit',plan:'SPATIAL PLAN',planNote:'Click 1–4 or press number keys · schematic',
     look:'Click or press E to examine ↗',blocked:'SIGHTLINE INTERRUPTED',blockedHint:'Move sideways to see around the pillar or altar.',viewToasts:['South entrance · the altar interrupts the first view.','West aisle · a mural emerges beyond the columns.','North turn · another story enters the view.','East aisle · face the opposite wall.'],steps:[
       ['SOUTH ENTRANCE','The first view is incomplete.','From the doorway, the altar blocks the view of parts of the northern wall.'],
@@ -212,15 +222,15 @@ const content = {
       ['Reposition','Restored image planes are linked to their wall zones in a navigable architectural scene. The altar, columns, and openings are not merely decorative; they interrupt the viewer’s sightlines.'],
       ['Revisit','A walking visitor sees one passage disappear and another appear. The online encounter is a different experience from seeing a composite panorama or a museum replica.']
     ],
-    evidenceTitle:'Historical sources & modeling limits',sourcesIntro:'This prototype is based on publicly documented hall organization. Its geometry is schematic, not a laser-scanned or survey-verified reconstruction; published mural photographs are illustrative references with unverified wall positions. The 1096 painting date refers to the mural program, not necessarily the hall completion date.',
+    evidenceTitle:'Historical sources & modeling limits',sourcesIntro:'This prototype is based on publicly documented hall organization. Its geometry is schematic, not a laser-scanned or survey-verified reconstruction; the supplied digitized mural images are hosted locally. The 1096 painting date refers to the mural program, not necessarily the hall completion date.',
     refs:['Gaoping Municipal Government · Historical overview of Kaihua Temple','The Palace Museum · Study of architecture and mural distribution','Peking University Museum · Kaihua Temple mural exhibition','Harvard CAMLab · Digital Temple (independent reference)'],
     foot:'Interpretive prototype · not a measured reconstruction',assetTag:'AWAITING SOURCE MATERIAL',toastScan:'The original/restored image has not been added yet.',toastGuide:'Move the mouse to look. Use WASD to walk; Esc releases the cursor.',toastEnd:'Guided walk complete. You can keep exploring freely.',loading:'Preparing the hall'
   },
   zh: {
     nav:['项目引言','步入大殿','壁画图录','方法与证据'],kicker:'山西 · 高平 · 北宋',hero:'图像不只是<br><em>一面墙。</em>',sub:'重返开化 · 让壁画随脚步展开',
     copy:'开化寺壁画并非为了被一眼看尽。走入大殿，绕过佛坛，让立柱遮住部分视线，观察一面墙的故事如何隐去，另一面墙又如何展开。',
-    enter:'进入大殿',archive:'查看壁画图录',caption:'关于建筑空间、图像叙事与身体观看的交互实验。已接入文献壁画照片，展示位置为示意，尚未核实原墙面对应关系。',
-    tourTitle:'走入图像之中',tourSub:'前进、转身，观察视线如何变化。',controls:'WASD 移动 · 鼠标转向 · 1–4 观察点 · Esc 释放 · E 查看',guide:'自动导览',pause:'暂停导览',resume:'继续导览',reset:'复位',exit:'退出',plan:'空间平面图',planNote:'点击地图 1–4 或按数字键 · 示意图',look:'点击或按 E 查看 ↗',blocked:'视线被建筑遮挡',blockedHint:'向旁边移动，观察佛坛或立柱如何遮挡画面。',viewToasts:['南侧入口：佛坛挡住部分视野。','西侧通道：从柱间观看壁画。','北侧转身：另一面壁画逐渐进入视野。','东侧通道：观察对面墙上的图像。'],
+    enter:'进入大殿',archive:'查看壁画图录',caption:'关于建筑空间、图像叙事与身体观看的交互实验。已接入三面数字壁画；建筑尺寸仍为空间示意。',
+    tourTitle:'走入图像之中',tourSub:'前进、转身，观察视线如何变化。',controls:'WASD 移动 · 鼠标转向 · 滚轮缩放 · 1–4 观察点 · Esc 释放 · E 查看',guide:'自动导览',pause:'暂停导览',resume:'继续导览',reset:'复位',exit:'退出',plan:'空间平面图',planNote:'点击地图 1–4 或按数字键 · 示意图',look:'点击或按 E 查看 ↗',blocked:'视线被建筑遮挡',blockedHint:'向旁边移动，观察佛坛或立柱如何遮挡画面。',viewToasts:['南侧入口：佛坛挡住部分视野。','西侧通道：从柱间观看壁画。','北侧转身：另一面壁画逐渐进入视野。','东侧通道：观察对面墙上的图像。'],
     steps:[['南侧入口','第一眼，无法看见全部。','从殿门向内看，佛坛会挡住部分北壁。'],['西侧通道','西壁随着脚步展开。','移动一点位置，立柱后的叙事细节就会出现。'],['佛坛北侧','转身，另一段故事开始。','前一面墙渐渐退出视线，下一面墙随之显现。'],['东侧通道','图像属于这座建筑。','建筑决定了人以什么顺序与壁画相遇。']],
     returnHall:'← 返回大殿',returnIntro:'← 返回项目首页',archiveTitle:'壁画空间图录',archiveIntro:'四个壁面分区，共同组成一座连续的殿内空间。选择墙面，查看画题、位置与证据。上传真实扫描图后可开启原图／复原对比。',
     wallNames:['西壁','东壁','北壁 · 西次间','北壁 · 东次间'],wallShort:['西壁','东壁','北壁西侧','北壁东侧'],
@@ -230,17 +240,13 @@ const content = {
     original:'文献原始照片',restored:'复原图像',comparison:'图像对比',wallWalk:'前往大殿查看这面墙',wallLocation:'上方画题介绍空间分区。照片为文献中的壁画参考图，其原墙面位置及与该画题的对应关系尚未核实；此处摆放仅供体验，不是实测复原。',
     methodTitle:'让图像重新可供行走',methodIntro:'关键问题不仅在于壁画上保存了什么，也在于观众站在哪里才能看到。',
     methods:[['数字记录','通过数字扫描记录现存壁画细节，并标明图像来源、保存状况与墙面位置，不将数字复原误认为原作。'],['细节复原','PS 描述了利用 SNAKE 模型辅助重建部分受损细节。对应扫描和输出就位后，可展示清晰的前后对比及不确定区域；本原型不伪称已执行算法。'],['重返墙面','将图像贴回可行走的三维建筑空间。佛坛、立柱和门洞不仅是装饰元素，它们会打断视线。'],['重新观看','行走使图像逐段显现，也让观看方式不同于浏览一张拼接后的长卷或展厅复制品。']],
-    evidenceTitle:'历史资料与建模边界',sourcesIntro:'本版本依据公开资料搭建殿内空间示意。几何尺寸尚未经实测确认，不是激光扫描模型；已接入开放文献中的壁画照片，但原墙面对应关系尚待核实。1096 年是壁画绘制相关年代，不应直接认定为大殿落成年份。',
+    evidenceTitle:'历史资料与建模边界',sourcesIntro:'本版本依据公开资料搭建殿内空间示意。几何尺寸尚未经实测确认，不是激光扫描模型；已接入用户提供的三面数字壁画，后壁分置于门洞两侧；建筑尺寸仍待实测复核。1096 年是壁画绘制相关年代，不应直接认定为大殿落成年份。',
     refs:['高平市人民政府 · 开化寺介绍','故宫博物院 · 开化寺建筑与壁画分布研究','北京大学赛克勒考古与艺术博物馆 · 开化寺壁画展','哈佛 CAMLab · Digital Temple（独立参考）'],
     foot:'交互原型 · 并非实测复原',assetTag:'等待真实素材',toastScan:'尚未添加这面墙的原图或复原图。',toastGuide:'移动鼠标环顾四周，使用 WASD 行走；Esc 释放鼠标。',toastEnd:'导览结束。你可以继续自由探索。',loading:'正在进入大殿'
   }
 };
-const WALLS = [
-  {id:'west',key:'west',width:9.45,height:2.95,x:-5.73,y:2.45,z:-.05,ry:Math.PI/2,target:[-4.2,1.72,.3]},
-  {id:'east',key:'east',width:9.45,height:2.95,x:5.73,y:2.45,z:-.05,ry:-Math.PI/2,target:[4.2,1.72,.3]},
-  {id:'northWest',key:'northWest',width:4.35,height:2.95,x:-3.28,y:2.45,z:-5.51,ry:0,target:[-3.3,1.72,-3.9]},
-  {id:'northEast',key:'northEast',width:4.35,height:2.95,x:3.28,y:2.45,z:-5.51,ry:0,target:[3.3,1.72,-3.9]}
-];
+const WALLS=[];
+let muralCatalog=null;
 const sources = [
  'https://www.sxgp.gov.cn/zjgp/fjms_425/202511/t20251128_2291193.shtml',
  'https://www.dpm.org.cn/Uploads/File/pdf/bc/8d/f2/bc8df23f990313c46d94ffd7e84bc56f.pdf',
@@ -255,41 +261,26 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.8));renderer.setSiz
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;$('webgl').appendChild(renderer.domElement);
 // Geometry, materials, daylight, occlusion and collision footprints share one model.
 const {occluders,obstacles,columnCenters,materialsReady}=buildHall(scene,renderer);
+const staticBatch=batchStaticMeshes(scene);
+renderer.domElement.tabIndex=0;
 
 function seeded(seed){return ()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}}
-function makeDiagram(key,aspect){
- // Deliberately nonfigurative wall texture. No invented mural imagery.
- const W=1536,H=Math.round(W/aspect),cvs=document.createElement('canvas');cvs.width=W;cvs.height=H;
- const ctx=cvs.getContext('2d'),rnd=seeded({west:113,east:440,northWest:829,northEast:1202}[key]);
- const wash=ctx.createLinearGradient(0,0,W,H);wash.addColorStop(0,'#918573');wash.addColorStop(.55,'#8b8171');wash.addColorStop(1,'#827766');
- ctx.fillStyle=wash;ctx.fillRect(0,0,W,H);
- for(let i=0;i<9000;i++){const x=rnd()*W,y=rnd()*H,opacity=.012+rnd()*.026;ctx.fillStyle=rnd()>.6?`rgba(230,210,172,${opacity})`:`rgba(38,40,32,${opacity})`;ctx.fillRect(x,y,1+rnd()*5,1+rnd()*5)}
- const edge=ctx.createLinearGradient(0,0,0,H);edge.addColorStop(0,'rgba(43,40,32,.08)');edge.addColorStop(.4,'rgba(38,35,28,0)');edge.addColorStop(1,'rgba(40,35,28,.12)');ctx.fillStyle=edge;ctx.fillRect(0,0,W,H);
- ctx.strokeStyle='rgba(236,224,197,.18)';ctx.lineWidth=2;ctx.strokeRect(21,21,W-42,H-42);
- const wallNames={west:'WEST WALL',east:'EAST WALL',northWest:'NORTH · WEST',northEast:'NORTH · EAST'};
- ctx.textAlign='center';ctx.fillStyle='rgba(39,42,32,.55)';ctx.font=`${Math.max(17,Math.round(H*.055))}px Georgia`;ctx.fillText(wallNames[key],W/2,H*.49);
- ctx.font=`${Math.max(11,Math.round(H*.025))}px Arial`;ctx.fillStyle='rgba(45,43,35,.48)';ctx.fillText('DOCUMENTED MURAL SCAN PENDING',W/2,H*.57);
- const tex=new THREE.CanvasTexture(cvs);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=renderer.capabilities.getMaxAnisotropy();return tex;
-}
-const clickable=[];const muralMeshes={};
-for(let i=0;i<WALLS.length;i++){const w=WALLS[i],texture=makeDiagram(w.key,w.width/w.height);const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w.width,w.height),new THREE.MeshStandardMaterial({map:texture,side:THREE.DoubleSide,roughness:1,transparent:false,emissive:0x221a10,emissiveIntensity:.07}));mesh.rotation.y=w.ry;mesh.position.set(w.x,w.y,w.z);mesh.userData.wall=i;mesh.receiveShadow=true;scene.add(mesh);clickable.push(mesh);muralMeshes[w.key]=mesh;
-  // Removed projecting mural frame strips, which formed sharp diagonal edges up close.
-}
+const clickable=[],muralMeshes={};
 // Small particles of dust in diagonal light; visual ambience only.
 const dustPos=new Float32Array(270*3);const random=seeded(734);for(let i=0;i<270;i++){dustPos[3*i]=(random()-.5)*11;dustPos[3*i+1]=random()*5;dustPos[3*i+2]=(random()-.5)*10}const dustGeometry=new THREE.BufferGeometry();dustGeometry.setAttribute('position',new THREE.BufferAttribute(dustPos,3));const dust=new THREE.Points(dustGeometry,new THREE.PointsMaterial({size:.018,color:0xe8ccb0,transparent:true,opacity:.33,sizeAttenuation:true}));scene.add(dust);
 
 const raycaster=new THREE.Raycaster();const pointer=new THREE.Vector2(0,0);const clock=new THREE.Clock();
 const guidePoints=[new THREE.Vector3(0,1.7,4.7),new THREE.Vector3(-3.5,1.7,4.15),new THREE.Vector3(-3.9,1.7,.25),new THREE.Vector3(-3.65,1.7,-3.60),new THREE.Vector3(0,1.7,-4.33),new THREE.Vector3(3.68,1.7,-3.55),new THREE.Vector3(3.8,1.7,.9),new THREE.Vector3(3.9,1.7,4.3)];
 const guideCurve=new THREE.CatmullRomCurve3(guidePoints,false,'catmullrom',.4);
-const guideLookPoints=[new THREE.Vector3(0,2.65,-.62),new THREE.Vector3(-4.2,2.2,-.2),new THREE.Vector3(-5.6,2.45,-.3),new THREE.Vector3(-5.5,2.45,-3.0),new THREE.Vector3(-3.1,2.45,-5.0),new THREE.Vector3(4.9,2.45,-4.0),new THREE.Vector3(5.6,2.45,-.15),new THREE.Vector3(4.8,2.4,-.2)];
+const guideLookPoints=[new THREE.Vector3(0,2.65,-.62),new THREE.Vector3(-4.2,2.2,-.2),new THREE.Vector3(-5.6,2.45,-.3),new THREE.Vector3(-5.5,2.45,-3.0),new THREE.Vector3(-3.28,2.45,-5.51),new THREE.Vector3(4.9,2.45,-4.0),new THREE.Vector3(5.6,2.45,-.15),new THREE.Vector3(4.8,2.4,-.2)];
 const guideLookCurve=new THREE.CatmullRomCurve3(guideLookPoints,false,'catmullrom',.25);
-const viewpoints=[{position:[0,1.7,4.72],target:[0,2.65,-.62]},{position:[-3.9,1.7,.25],target:[-5.65,2.45,-.25]},{position:[0,1.7,-4.25],target:[-3.3,2.45,-4.95]},{position:[3.9,1.7,.25],target:[5.65,2.45,-.25]}];
-function setHomeCamera(){camera.position.set(3.65,2.10,4.95);camera.lookAt(-.35,2.80,-.62);state.yaw=0;state.pitch=0;}
-function setEntryCamera(){camera.position.set(0,1.7,4.72);state.yaw=0;state.pitch=.16;setOrientation()}
+const viewpoints=[{position:[0,1.7,4.72],target:[0,2.65,-.62]},{position:[-3.9,1.7,.25],target:[-5.65,2.45,-.25]},{position:[0,1.7,-4.25],target:[-3.28,2.45,-5.51]},{position:[3.9,1.7,.25],target:[5.65,2.45,-.25]}];
+function setHomeCamera(){hallZoom.reset();camera.position.set(3.65,2.10,4.95);camera.lookAt(-.35,2.80,-.62);state.yaw=0;state.pitch=0;}
+function setEntryCamera(){hallZoom.reset();camera.position.set(0,1.7,4.72);state.yaw=0;state.pitch=.16;setOrientation()}
 function setOrientation(){camera.rotation.order='YXZ';camera.rotation.y=state.yaw;camera.rotation.x=state.pitch;camera.rotation.z=0}
 function jumpToView(index){
  const v=viewpoints[index];if(!v||state.mode!=='explore'||state.drawer)return;
- lookInput.reset();
+ lookInput.reset();hallZoom.reset();
  state.guide=false;state.guidePaused=false;state.keys.clear();state.touch.clear();
  camera.position.set(...v.position);camera.lookAt(...v.target);syncOrientationFromCamera();setOrientation();
  $('guide-label').textContent=content[state.lang].guide;
@@ -304,6 +295,13 @@ const lookInput=createLookControls({
  onRotate:(yaw,pitch)=>{state.yaw+=yaw;state.pitch=THREE.MathUtils.clamp(state.pitch+pitch,-1.32,1.32)},
  onInspect:inspectWall,onRequestLock:captureMouse
 });
+const hallZoom=createHallZoom({
+ element:renderer.domElement,camera,isEnabled:()=>state.mode==='explore'&&!state.drawer,
+ onInteraction:cancelGuide,onChange:zoom=>{
+  $('hall-zoom-level').textContent=zoom.toFixed(1)+'×';$('hall-zoom-out').disabled=zoom<=1;$('hall-zoom-in').disabled=zoom>=3;
+ }
+});
+let detailViewer=null,detailWallId=null;
 let lockPending=false;
 function releaseMouse(){lookInput.reset();if(document.pointerLockElement===renderer.domElement)document.exitPointerLock?.();}
 function updateMouseHint(){const hint=$('mouse-hint');if(hint)hint.hidden=state.mode!=='explore'||Boolean(state.drawer)||state.guide||document.pointerLockElement===renderer.domElement||matchMedia('(pointer:coarse)').matches;}
@@ -318,76 +316,52 @@ function captureMouse(){
 }
 function cancelGuide(){if(state.guide){state.guide=false;state.guidePaused=false;syncOrientationFromCamera();$('guide-label').textContent=content[state.lang].guide;updateMouseHint();}}
 setHomeCamera();
-function applyLang(){const t=content[state.lang];document.documentElement.lang=state.lang==='zh'?'zh-CN':'en';$('language').textContent=state.lang==='en'?'中文':'EN';['nav-home','nav-explore','nav-atlas','nav-method'].forEach((id,i)=>$(id).textContent=t.nav[i]);$('hero-kicker').textContent=t.kicker;$('hero-heading').innerHTML=t.hero;$('hero-subtitle').textContent=t.sub;$('hero-copy').textContent=t.copy;$('enter-label').textContent=t.enter;$('hero-archive').innerHTML=`${t.archive} <span>↗</span>`;$('hero-caption').textContent=t.caption;$('tour-title').textContent=t.tourTitle;$('tour-subtitle').textContent=t.tourSub;$('controls-text').textContent=t.controls;$('guide-label').textContent=state.guide?(state.guidePaused?t.resume:t.pause):t.guide;$('reset-label').textContent=t.reset;$('exit-label').textContent=t.exit;$('plan-label').textContent=t.plan;$('plan-note').textContent=t.planNote;$('look-hint').textContent=t.look;$('mouse-hint').textContent=state.lang==='en'?'Click the hall to resume mouse look · Esc unlocks':'点击大殿继续鼠标转向 · Esc 释放鼠标';$('footnote').textContent=t.foot;if($('loading-text'))$('loading-text').textContent=t.loading;showPositionInfo();if(!$('overlay').hidden){$('close-label').textContent=state.mode==='explore'?t.returnHall:t.returnIntro;renderDrawer();}}
+function applyLang(){const t=content[state.lang];document.documentElement.lang=state.lang==='zh'?'zh-CN':'en';$('language').textContent=state.lang==='en'?'中文':'EN';['nav-home','nav-explore','nav-atlas','nav-method'].forEach((id,i)=>$(id).textContent=t.nav[i]);$('hero-kicker').textContent=t.kicker;$('hero-heading').innerHTML=t.hero;$('hero-subtitle').textContent=t.sub;$('hero-copy').textContent=t.copy;$('enter-label').textContent=t.enter;$('hero-archive').innerHTML=`${t.archive} <span>↗</span>`;$('hero-caption').textContent=t.caption;$('tour-title').textContent=t.tourTitle;$('tour-subtitle').textContent=t.tourSub;$('controls-text').textContent=t.controls;
+for(const [id,en,zh] of [['hall-zoom-in','Zoom in','放大'],['hall-zoom-out','Zoom out','缩小'],['hall-zoom-reset','Reset zoom','复位缩放']]){$(id).setAttribute('aria-label',state.lang==='zh'?zh:en);$(id).title=state.lang==='zh'?zh:en}
+$('guide-label').textContent=state.guide?(state.guidePaused?t.resume:t.pause):t.guide;$('reset-label').textContent=t.reset;$('exit-label').textContent=t.exit;$('plan-label').textContent=t.plan;$('plan-note').textContent=t.planNote;$('look-hint').textContent=t.look;$('mouse-hint').textContent=state.lang==='en'?'Click the hall to resume mouse look · Esc unlocks':'点击大殿继续鼠标转向 · Esc 释放鼠标';$('footnote').textContent=t.foot;if($('loading-text'))$('loading-text').textContent=t.loading;showPositionInfo();if(!$('overlay').hidden){$('close-label').textContent=state.mode==='explore'?t.returnHall:t.returnIntro;renderDrawer();}}
 function clearDrawer(){
+ const wasOpen=Boolean(state.drawer);
+ detailViewer?.destroy();detailViewer=null;detailWallId=null;
  lookInput.reset();
  const el=$('overlay');el.hidden=true;document.querySelectorAll('.navlink').forEach(b=>b.classList.toggle('active',b.dataset.nav===state.mode));state.drawer=null;state.keys.clear();state.touch.clear();
  updateMouseHint();
+ if(wasOpen&&state.mode==='explore')renderer.domElement.focus({preventScroll:true});
  // The camera is deliberately not reset: visitors return to exactly where they stood.
 }
 function setMode(mode){releaseMouse();clearDrawer();state.mode=mode;state.keys.clear();state.touch.clear();document.body.classList.toggle('mode-explore',mode==='explore');$('home').hidden=mode==='explore';$('explore-ui').hidden=mode!=='explore';if(mode==='explore'){setEntryCamera();state.guide=false;state.guideT=0;state.guidePaused=false;state.positions.clear();showPositionInfo();if(!matchMedia('(pointer:coarse)').matches)toast(content[state.lang].toastGuide);}else setHomeCamera();document.querySelectorAll('.navlink').forEach(b=>b.classList.toggle('active',b.dataset.nav===mode));updateMouseHint();}
 function setDrawer(view,wall=state.activeWall){
+ $('toast').classList.remove('visible');
+ if(state.guide){state.guidePaused=true;$('guide-label').textContent=content[state.lang].resume;}
  releaseMouse();state.keys.clear();state.touch.clear();
  state.drawer=view;state.activeWall=wall;
- $('overlay').hidden=false;
+ $('overlay').hidden=false;$('overlay').classList.toggle('mural-detail-open',view==='atlas');
  $('drawer-kicker').textContent=view==='atlas'?'KAIHUA / WALL ARCHIVE':'KAIHUA / METHOD & EVIDENCE';
  $('close-label').textContent=state.mode==='explore'?content[state.lang].returnHall:content[state.lang].returnIntro;
  $('drawer-body').scrollTop=0;
  renderDrawer();updateMouseHint();
  document.querySelectorAll('.navlink').forEach(b=>b.classList.toggle('active',b.dataset.nav===view));
 }
+function escapeHTML(value){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
 function renderDrawer(){
+ detailViewer?.destroy();detailViewer=null;detailWallId=null;
  const t=content[state.lang],body=$('drawer-body');
  if(state.drawer==='atlas'){
-  const i=state.activeWall,w=WALLS[i],a=state.assets[w.key]||{};
-  const hasOriginal=Boolean(a.original&&state.available[w.key]?.original);
-  const hasRestored=Boolean(a.restored&&state.available[w.key]?.restored);
-  const hasBoth=hasOriginal&&hasRestored;
-  const hasImage=hasOriginal||hasRestored;
-  const picture=hasBoth
-   ? `<img src="${safeUrl(a.original)}" alt="${t.original}"><img id="compare-restored" src="${safeUrl(a.restored)}" alt="${t.restored}"><span class="compare-line" id="compare-line"></span>`
-   : hasImage ? `<img src="${safeUrl(hasOriginal?a.original:a.restored)}" alt="${hasOriginal?t.original:t.restored}">`
-   : `<div class="missing"><strong>${t.noImages}</strong><small>${t.noImagesHint}</small></div>`;
-  body.innerHTML=`
-   <div class="archive-page">
-    <span class="sublabel">KAIHUA / WALL ${String(i+1).padStart(2,'0')} — 04</span>
-    <h2 id="drawer-heading" class="archive-title">${t.wallNames[i]}</h2>
-    <p class="archive-intro">${t.archiveIntro}</p>
-    <div class="wall-tabs" role="group" aria-label="${t.archiveTitle}">
-      ${t.wallNames.map((v,j)=>`<button type="button" class="${j===i?'active':''}" aria-pressed="${j===i}" data-wall="${j}">${v}</button>`).join('')}
-    </div>
-    <article class="wall-detail-grid">
-     <div class="wall-artwork">
-      <div class="comparison-head"><span>${hasBoth?t.comparison:t.original}</span><span>${hasBoth?'01 — 02':hasImage?'SOURCE / 01':'SOURCE STATUS / 00'}</span></div>
-      <div class="compare-view" id="compare-view">${picture}</div>
-      ${hasBoth?`<input class="compare-range" id="compare-range" type="range" min="0" max="100" value="50" aria-label="Original and restoration comparison"><div class="compare-legend"><span>${t.restored}</span><span>${t.original}</span></div>`:''}
-     </div>
-     <div class="wall-detail-info">
-      <span class="sublabel">${t.wallNames[i]}</span>
-      <h3>${t.wallNames[i]}</h3>
-      <span class="wall-scripture">${t.themes[i]}</span>
-      <p>${t.wallNotes[i]}</p>
-      <div class="evidence-box"><p>${t.wallLocation}</p><span class="status-tag">${hasImage?(state.lang==='zh'?'已接入文献图版 · 非实测拼接':'PUBLISHED IMAGE · SCHEMATIC PLACEMENT'):t.assetTag}</span></div>${hasImage?`<div class="evidence-box"><p>${state.lang==='zh'?'图像出处、授权及位置说明':'Image credits, license and placement notes'}: <a href="./assets/murals/index.html" target="_blank" rel="noopener">${state.lang==='zh'?'查看素材记录':'View image records'}</a></p>`:'<div hidden>'}</div>
-      <button class="visit-wall" id="visit-wall">${t.wallWalk}<span aria-hidden="true">↗</span></button>
-     </div>
-    </article>
-   </div>`;
-  body.querySelectorAll('[data-wall]').forEach(el=>el.onclick=()=>setDrawer('atlas',Number(el.dataset.wall)));
-  const range=$('compare-range');
-  if(range)range.oninput=()=>{
-   const val=Number(range.value);
-   $('compare-restored').style.clipPath=`inset(0 ${100-val}% 0 0)`;
-   $('compare-line').style.left=`${val}%`;
-  };
-  $('visit-wall').onclick=()=>{
-   setMode('explore');
-   camera.position.set(...w.target);
-   const dir=new THREE.Vector3(w.x,w.y,w.z).sub(camera.position);
-   state.yaw=Math.atan2(-dir.x,-dir.z);
-   state.pitch=Math.atan2(dir.y,Math.hypot(dir.x,dir.z));
-   setOrientation();updateMap();updateMouseHint();
-   captureMouse();
-  };
+  if(!muralCatalog){body.innerHTML='<p class="mural-status">'+(state.lang==='zh'?'正在载入壁画资源…':'Loading mural resources…')+'</p>';return;}
+  const id=WALLS[state.activeWall]?.muralId||muralCatalog.walls[0].id,wall=muralCatalog.walls.find(item=>item.id===id);
+  detailWallId=wall.id;
+  $('drawer-kicker').textContent='KAIHUA / '+wall.label[state.lang];
+  body.innerHTML=`<section class="mural-detail" aria-label="${escapeHTML(wall.label[state.lang])}"><h2 id="drawer-heading" class="mural-detail-title">${escapeHTML(wall.label[state.lang])}</h2>
+   <div class="mural-toolbar">
+    <nav class="mural-tabs" role="tablist" aria-label="${state.lang==='zh'?'选择壁画':'Choose mural'}">${muralCatalog.walls.map(item=>`<button type="button" role="tab" data-mural="${item.id}" aria-selected="${item.id===wall.id}">${escapeHTML(item.label[state.lang])}</button>`).join('')}</nav>
+    <div class="mural-view-controls"><button type="button" id="mural-zoom-out" aria-label="${state.lang==='zh'?'缩小':'Zoom out'}">−</button><button type="button" id="mural-fit">${state.lang==='zh'?'全图':'Fit'}</button><button type="button" id="mural-zoom-in" aria-label="${state.lang==='zh'?'放大':'Zoom in'}">+</button></div>
+   </div>
+   <div id="deepzoom-stage" class="mural-stage" tabindex="0" aria-label="${escapeHTML(wall.label[state.lang])}"></div>
+   <p class="mural-status" id="mural-status" role="status"></p>
+  </section>`;
+  body.querySelectorAll('[data-mural]').forEach(button=>button.onclick=()=>{
+   const index=WALLS.findIndex(w=>w.muralId===button.dataset.mural);setDrawer('atlas',Math.max(0,index));
+  });
+  detailViewer=createMuralViewer({host:$('deepzoom-stage'),wall,lang:state.lang,zoomIn:$('mural-zoom-in'),zoomOut:$('mural-zoom-out'),fit:$('mural-fit'),status:$('mural-status')});
  }else{
   body.innerHTML=`<div class="method-page">
     <span class="sublabel">METHOD & DOCUMENTATION / 03</span>
@@ -400,7 +374,6 @@ function renderDrawer(){
    </div>`;
  }
 }
-function safeUrl(s){return typeof s==='string'&&/^\.\/assets\/murals\/(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+\.(jpg|jpeg|png|webp)$/.test(s)?s:''}
 function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('visible');clearTimeout(toast.timeout);toast.timeout=setTimeout(()=>el.classList.remove('visible'),2600)}
 function showPositionInfo(){const t=content[state.lang];let x=camera.position.x,z=camera.position.z;let step=z<-2.8?2:x<-2.7?1:x>2.7?3:0;const [where,head,description]=t.steps[step];$('current-location').textContent=where;$('current-step').textContent=head;$('step-description').textContent=description;$('tour-progress-fill').style.width=`${(step+1)*25}%`;}
 function allowed(x,z){
@@ -408,7 +381,23 @@ function allowed(x,z){
  if(x < -5.25 || x > 5.25 || z < -5.05 || z > 4.95)return false;
  return !obstacles.some(o=>Math.abs(x-o.x)<o.halfX+radius&&Math.abs(z-o.z)<o.halfZ+radius);
 }
-function move(dt){dt=Number.isFinite(dt)?THREE.MathUtils.clamp(dt,0,.05):0;lookInput.update(dt);let f=0,r=0;if(state.keys.has('KeyW')||state.keys.has('ArrowUp')||state.touch.has('forward'))f+=1;if(state.keys.has('KeyS')||state.keys.has('ArrowDown')||state.touch.has('back'))f-=1;if(state.keys.has('KeyA')||state.touch.has('left'))r-=1;if(state.keys.has('KeyD')||state.touch.has('right'))r+=1;if(state.keys.has('ArrowLeft'))state.yaw+=dt*1.24;if(state.keys.has('ArrowRight'))state.yaw-=dt*1.24;if(f||r){let l=Math.hypot(f,r);f/=l;r/=l;let s=Math.min(dt,.07)*2.65;const dx=(-Math.sin(state.yaw)*f+Math.cos(state.yaw)*r)*s;const dz=(-Math.cos(state.yaw)*f-Math.sin(state.yaw)*r)*s;let p=camera.position;if(allowed(p.x+dx,p.z))p.x+=dx;if(allowed(p.x,p.z+dz))p.z+=dz;}setOrientation();}
+function move(dt){
+ const elapsed=Number.isFinite(dt)?THREE.MathUtils.clamp(dt,0,.1):0,turnTime=Math.min(elapsed,.05);lookInput.update(turnTime);
+ let f=0,r=0;
+ if(state.keys.has('KeyW')||state.keys.has('ArrowUp')||state.touch.has('forward'))f++;
+ if(state.keys.has('KeyS')||state.keys.has('ArrowDown')||state.touch.has('back'))f--;
+ if(state.keys.has('KeyA')||state.touch.has('left'))r--;
+ if(state.keys.has('KeyD')||state.touch.has('right'))r++;
+ if(state.keys.has('ArrowLeft'))state.yaw+=turnTime*1.24;
+ if(state.keys.has('ArrowRight'))state.yaw-=turnTime*1.24;
+ if(f||r){
+  const length=Math.hypot(f,r);f/=length;r/=length;
+  const steps=Math.max(1,Math.ceil(elapsed/.02)),distance=elapsed*2.65/steps;
+  const dx=(-Math.sin(state.yaw)*f+Math.cos(state.yaw)*r)*distance,dz=(-Math.cos(state.yaw)*f-Math.sin(state.yaw)*r)*distance;
+  for(let i=0;i<steps;i++){const p=camera.position;if(allowed(p.x+dx,p.z))p.x+=dx;if(allowed(p.x,p.z+dz))p.z+=dz;}
+ }
+ setOrientation();
+}
 function updateGuided(dt){
  if(!state.guide||state.guidePaused)return;
  state.guideT+=Math.min(dt,.06)/52;
@@ -429,10 +418,12 @@ for(const o of obstacles.slice(0,-1)){
 const altarFootprint=obstacles.at(-1),altarCorner=worldToPlan(altarFootprint.x-altarFootprint.halfX,altarFootprint.z-altarFootprint.halfZ);
 const planAltar=document.querySelector('.plan-altar');
 for(const [key,value] of Object.entries({x:altarCorner.x,y:altarCorner.y,width:altarFootprint.halfX*30,height:altarFootprint.halfZ*29.5}))planAltar.setAttribute(key,value);
+function updateWallPlan(){
 for(const w of WALLS){
  const node=$('plan-wall-'+w.key),a=worldToPlan(w.x,w.z);
  if(w.key.startsWith('north')){const left=worldToPlan(w.x-w.width/2,w.z),right=worldToPlan(w.x+w.width/2,w.z);node.setAttribute('d',`M${left.x} ${left.y} H${right.x}`)}
  else{const top=worldToPlan(w.x,w.z-w.width/2),bottom=worldToPlan(w.x,w.z+w.width/2);node.setAttribute('d',`M${top.x} ${top.y} V${bottom.y}`)}
+}
 }
 $('map-route').setAttribute('d',guideCurve.getPoints(80).map((p,i)=>{const m=worldToPlan(p.x,p.z);return `${i?'L':'M'}${m.x.toFixed(1)},${m.y.toFixed(1)}`}).join(' '));
 function updateMap(){const {x,y}=worldToPlan(camera.position.x,camera.position.z);
@@ -442,13 +433,14 @@ function updateMap(){const {x,y}=worldToPlan(camera.position.x,camera.position.z
 }
 // Shared raycasting for the crosshair, click, keyboard inspection, and touch.
 function hitWall(clientX=null,clientY=null){
+ camera.updateMatrixWorld(true);
  let ndc=pointer;
  if(clientX!==null&&clientY!==null&&document.pointerLockElement!==renderer.domElement){
    const box=renderer.domElement.getBoundingClientRect();
    ndc=new THREE.Vector2(((clientX-box.left)/box.width)*2-1,1-((clientY-box.top)/box.height)*2);
  }
  raycaster.setFromCamera(ndc,camera);
- const wall=raycaster.intersectObjects(clickable,false)[0];
+ const wall=raycaster.intersectObjects(clickable,false).find(hit=>visiblePixel(hit.object.userData.hitMask,hit.uv));
  if(!wall||wall.distance>12)return null;
  const blocker=raycaster.intersectObjects(occluders,false)[0];
  return blocker&&blocker.distance+.035<wall.distance?{blocked:true}:{blocked:false,index:wall.object.userData.wall};
@@ -468,12 +460,15 @@ function lookForWall(){
  else{state.hoverWall=hit.index;$('look-region').textContent=t.wallShort[hit.index];$('look-hint').textContent=t.look;}
  label.hidden=false;
 }
-let lastHUD=0;function animate(){requestAnimationFrame(animate);const dt=clock.getDelta();if(state.mode==='explore'){if(!state.drawer){if(state.guide)updateGuided(dt);else move(dt);}let now=performance.now();if(now-lastHUD>135){showPositionInfo();updateMap();lookForWall();lastHUD=now}}else{dust.rotation.y+=dt*.0015}renderer.render(scene,camera)}
+let lastHUD=0;function animate(){requestAnimationFrame(animate);const dt=clock.getDelta();if(state.drawer||document.hidden)return;if(state.mode==='explore'){if(!state.drawer){if(state.guide)updateGuided(dt);else move(dt);}let now=performance.now();if(now-lastHUD>135){showPositionInfo();updateMap();lookForWall();lastHUD=now}}else{dust.rotation.y+=dt*.0015}renderer.render(scene,camera)}
 function bind(){
   document.querySelectorAll('[data-nav]').forEach(btn=>btn.onclick=()=>{const k=btn.dataset.nav;if(k==='home'||k==='explore'){setMode(k);if(k==='explore')captureMouse();}else setDrawer(k)});
   $('brand').onclick=e=>{e.preventDefault();setMode('home')};
   $('enter').onclick=()=>{setMode('explore');captureMouse()};
   $('hero-archive').onclick=()=>setDrawer('atlas');
+  $('hall-zoom-in').onclick=()=>hallZoom.setZoom(hallZoom.getZoom()*1.25,true);
+  $('hall-zoom-out').onclick=()=>hallZoom.setZoom(hallZoom.getZoom()/1.25,true);
+  $('hall-zoom-reset').onclick=()=>hallZoom.setZoom(1,true);
   $('language').onclick=()=>{state.lang=state.lang==='en'?'zh':'en';applyLang()};
   $('close-overlay').onclick=clearDrawer;
   $('close-backdrop').onclick=clearDrawer;
@@ -507,50 +502,22 @@ function bind(){
   }
   window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 } 
-function refreshAssetView(key){
- if(state.drawer==='atlas'&&WALLS[state.activeWall].key===key)renderDrawer();
-}
-// Letterbox photographs rather than distorting their aspect ratio to the wall.
-function wallTexture(image,wall){
- const canvas=document.createElement('canvas');
- canvas.width=Math.min(2048,renderer.capabilities.maxTextureSize);
- canvas.height=Math.round(canvas.width*wall.height/wall.width);
- const ctx=canvas.getContext('2d');ctx.fillStyle='#807361';ctx.fillRect(0,0,canvas.width,canvas.height);
- const scale=Math.min(canvas.width/image.width,canvas.height/image.height);
- const width=image.width*scale,height=image.height*scale;
- ctx.drawImage(image,(canvas.width-width)/2,(canvas.height-height)/2,width,height);
- const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
- texture.anisotropy=renderer.capabilities.getMaxAnisotropy();return texture;
-}
 async function loadAssets(){
  try{
-  const response=await fetch('./assets/murals/manifest.json',{cache:'no-store'});
-  if(!response.ok)throw new Error(`Manifest HTTP ${response.status}`);
-  const manifest=await response.json(),loader=new THREE.TextureLoader();
-  for(const w of WALLS){
-   const a=manifest[w.key]||{};
-   state.assets[w.key]={original:safeUrl(a.original)||null,restored:safeUrl(a.restored)||null};
-   state.available[w.key]={};
-   for(const layer of ['original','restored']){
-    const path=state.assets[w.key][layer];if(!path)continue;
-    loader.load(path,tex=>{
-     state.available[w.key][layer]=true;
-     // Keep the historic photograph on the wall; restorations belong in comparison.
-     if(layer==='original'||!state.available[w.key].original){
-      const mesh=muralMeshes[w.key],old=mesh.material.map;
-      mesh.material.map=wallTexture(tex.image,w);mesh.material.needsUpdate=true;old?.dispose();
-     }
-     tex.dispose();refreshAssetView(w.key);
-    },undefined,()=>{state.available[w.key][layer]=false;refreshAssetView(w.key);console.warn('Mural image unavailable:',path)});
-   }
-  }
- }catch(e){console.warn('Mural manifest could not be loaded',e)}
+  muralCatalog=await loadMuralCatalog();
+  const surfaces=await createMuralSurfaces(muralCatalog,scene,renderer);
+  WALLS.push(...surfaces.walls.map(w=>({...w,x:w.position[0],y:w.position[1],z:w.position[2],ry:w.rotationY})));
+  clickable.push(...surfaces.clickable);Object.assign(muralMeshes,surfaces.muralMeshes);
+  for(const w of WALLS){state.assets[w.key]={original:w.textureUrl,restored:null};state.available[w.key]={original:Boolean(muralMeshes[w.key])};}
+  updateWallPlan();if(state.drawer==='atlas')renderDrawer();
+  renderer.shadowMap.needsUpdate=true;
+ }catch(error){console.warn('Prepared murals unavailable',error);if(state.drawer==='atlas')$('drawer-body').textContent=state.lang==='zh'?'壁画资源未就绪，请检查本地资源与生成清单。':'Mural assets are unavailable. Check the prepared local catalog.';}
 }
 function init(){
- bind();applyLang();setHomeCamera();animate();loadAssets();
+ bind();applyLang();setHomeCamera();animate();const muralReady=loadAssets();
  // Complete local material loading before revealing the hall; fallback maps work offline.
- Promise.race([materialsReady,new Promise(resolve=>setTimeout(resolve,5000))]).then(()=>{
-  $('loading')?.classList.add('done');setTimeout(()=>$('loading')?.remove(),450);
+ Promise.race([Promise.all([materialsReady,muralReady]),new Promise(resolve=>setTimeout(resolve,5000))]).then(()=>{
+  renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;$('loading')?.classList.add('done');setTimeout(()=>$('loading')?.remove(),450);
  });
 }
 init();
