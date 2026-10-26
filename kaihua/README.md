@@ -4,7 +4,7 @@ An interactive, bilingual (English / Simplified Chinese) spatial study of the No
 
 ## What this prototype does
 
-- First-person WebGL walkthrough, using mouse drag + WASD/arrow keys (touch movement pad on mobile)
+- First-person WebGL walkthrough, using click-to-lock mouse look + WASD/arrow keys; Esc unlocks the cursor, E examines a wall (touch drag + movement pad on mobile)
 - A continuous guided camera route through the south entrance, around the central altar, and along the east, west and north wall zones
 - Three-dimensional occlusion from the altar and columns (actual depth-tested occlusion, not a video transition)
 - Floor-plan minimap, wall selection, context annotations
@@ -60,3 +60,12 @@ The prototype follows the broad east / west / north mural organization, central 
 - GitHub Pages static hosting (no backend, no user tracking)
 
 Built as an expandable undergraduate art/design research prototype rather than a reproduction of an existing virtual exhibition.
+
+## First-person controls (v1.1)
+
+- Enter the Hall requests Pointer Lock from the browser. If needed, click the 3D canvas again.
+- Moving the mouse turns the camera **without holding a mouse button**; Escape unlocks it so menus can be used.
+- W moves horizontally in the camera's forward direction, S backward, and A/D sidestep relative to the camera.
+- E or a click examines the wall at the crosshair. Esc releases the cursor.
+- Opening a menu or starting a guided tour releases the cursor. During the guided tour, the manual view direction stays synchronized so switching back to walking does not reverse movement.
+- On touch screens, dragging to look around remains available.
