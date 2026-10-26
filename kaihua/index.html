@@ -104,7 +104,7 @@
   <div id="webgl" aria-hidden="true"></div>
   <div id="vignette" aria-hidden="true"></div>
   <div id="loading" role="status"><span class="loading-monogram">開</span><span id="loading-text">Preparing the hall</span><span class="loading-bar"><span></span></span></div>
-  <div id="fallback" hidden><h2>3D preview unavailable</h2><p>The interactive space requires a browser with WebGL and access to the Three.js CDN. The archive and methodology remain available.</p><a id="fallback-atlas" href="./assets/murals/index.html">Open wall archive / 查看壁画</a></div>
+  <div id="fallback" hidden><h2>3D preview unavailable</h2><p>The interactive space requires WebGL. Published images, credits and modeling notes remain available in the static archive.</p><a id="fallback-atlas" href="./assets/murals/index.html">Open wall archive / 查看壁画</a></div>
 
   <header class="topbar">
     <a class="brand" href="#home" id="brand" aria-label="Kaihua home"><span class="brand-seal">開</span><span><strong>KAIHUA</strong><small>DIGITAL SPATIAL STUDY</small></span></a>
@@ -183,7 +183,7 @@ const content = {
     nav:['Introduction','Walk the Hall','Wall Archive','Process & Evidence'], kicker:'SHANXI · CHINA · NORTHERN SONG',
     hero:'An image is<br><em>not a wall.</em>',sub:'重返开化 · 让壁画随脚步展开',
     copy:'The stories of Kaihua Temple were never meant to be seen all at once. Enter the hall, circle the altar, and discover what the walls reveal—and what the pillars conceal.',
-    enter:'Enter the Hall',archive:'Explore the archive',caption:'A study of architecture, pictorial sequence, and embodied viewing. Spatial model is interpretive; source imagery pending.',
+    enter:'Enter the Hall',archive:'Explore the archive',caption:'A study of architecture, pictorial sequence, and embodied viewing. Spatial model is interpretive; published photographs are illustrative references with unverified wall positions.',
     tourTitle:'Walk through the image',tourSub:'Move, turn, and watch your line of sight change.',controls:'WASD walk · Mouse look · 1–4 viewpoints · Esc unlock · E examine',
     guide:'Guided walk',pause:'Pause walk',resume:'Resume walk',reset:'Reset',exit:'Exit',plan:'SPATIAL PLAN',planNote:'Click 1–4 or press number keys · schematic',
     look:'Click or press E to examine ↗',blocked:'SIGHTLINE INTERRUPTED',blockedHint:'Move sideways to see around the pillar or altar.',viewToasts:['South entrance · the altar interrupts the first view.','West aisle · a mural emerges beyond the columns.','North turn · another story enters the view.','East aisle · face the opposite wall.'],steps:[
@@ -372,7 +372,7 @@ function renderDrawer(){
     </div>
     <article class="wall-detail-grid">
      <div class="wall-artwork">
-      <div class="comparison-head"><span>${t.comparison}</span><span>${hasBoth?'01 — 02':hasImage?'SOURCE / 01':'SOURCE STATUS / 00'}</span></div>
+      <div class="comparison-head"><span>${hasBoth?t.comparison:t.original}</span><span>${hasBoth?'01 — 02':hasImage?'SOURCE / 01':'SOURCE STATUS / 00'}</span></div>
       <div class="compare-view" id="compare-view">${picture}</div>
       ${hasBoth?`<input class="compare-range" id="compare-range" type="range" min="0" max="100" value="50" aria-label="Original and restoration comparison"><div class="compare-legend"><span>${t.restored}</span><span>${t.original}</span></div>`:''}
      </div>
