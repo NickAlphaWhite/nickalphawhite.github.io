@@ -69,3 +69,17 @@ Built as an expandable undergraduate art/design research prototype rather than a
 - E or a click examines the wall at the crosshair. Esc releases the cursor.
 - Opening a menu or starting a guided tour releases the cursor. During the guided tour, the manual view direction stays synchronized so switching back to walking does not reverse movement.
 - On touch screens, dragging to look around remains available.
+
+## V1.2 — Spatial-viewing study
+
+The hall is a **research prototype**, not a measured restoration and not an affiliate of Harvard CAMLab.
+
+- The SVG floor plan uses the same x/z world-coordinate mapping as the Three.js scene. The dot and heading rotate with the camera.
+- Four numbered research positions correspond to the actual south entrance, west aisle, north turn, and east aisle in the scene. Click them on the plan (after pressing Esc to unlock the cursor) or press `1`–`4` at any time in walk mode.
+- The guided route line is rendered from the same Catmull–Rom camera path used in the hall. A separate smoothly interpolated focus curve prevents abrupt gaze changes between walls.
+- The wall interaction is occlusion-aware: raycasting checks physical columns and solid altar volumes before allowing an archive view, and explains why a mural can be out of sight. This is **modelled geometry only**, not an archaeological claim that a specific image had exactly that visibility in the original hall.
+- Schematic wall textures are nonfigurative until verifiable, appropriately licensed digital scans are supplied through `assets/murals/manifest.json`.
+- Independent reference: [Harvard FAS CAMLab — Digital Temple](https://camlab.fas.harvard.edu/project/digital-temple/). Harvard's images, models and written content are not incorporated in this repository.
+
+### Quality checks
+The inline JavaScript module was syntax-checked. The four observation stations were checked against the simplified collision boundaries and the world-to-plan mapping; their forward directions align with the W-key movement vector. Browser-level interaction and GitHub Pages propagation still require verification on a real client.
