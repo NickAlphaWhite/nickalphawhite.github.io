@@ -20,7 +20,7 @@
 .plan-mural{fill:none;stroke:#d9bd88;stroke-width:4.1;stroke-linecap:butt;opacity:.94}.plan-mural.active{stroke:#fff1c4;stroke-width:5.2}
 .plan-altar{fill:#6b6554;stroke:#c4b493;stroke-width:1.3}.plan-altar-inner{fill:none;stroke:#ada18b;stroke-width:.85;opacity:.75}.plan-column{fill:#d0c0a4;stroke:#283026;stroke-width:1}
 .plan-room-label{font:8px Georgia,serif;letter-spacing:1px;fill:#b8a892;text-anchor:middle}.plan-cardinal{font:9px Arial,sans-serif;letter-spacing:1.7px;fill:#ddc5a0;text-anchor:middle}
-#map-user .direction-field{fill:#edcc92;fill-opacity:.13;stroke:#dbb783;stroke-width:.8;stroke-opacity:.25}#map-user .position-halo{fill:#ddbe8e;fill-opacity:.14}#map-user .direction-arrow{fill:#f6dec0;stroke:#253025;stroke-width:1}#map-user .position-center{fill:#fbebcb}
+#map-user{pointer-events:none}#map-user .direction-field{fill:#edcc92;fill-opacity:.13;stroke:#dbb783;stroke-width:.8;stroke-opacity:.25}#map-user .position-halo{fill:#ddbe8e;fill-opacity:.14}#map-user .direction-arrow{fill:#f6dec0;stroke:#253025;stroke-width:1}#map-user .position-center{fill:#fbebcb}
 .map-footer{font-size:9px;letter-spacing:.03em;color:#cbc1a8;text-align:center;line-height:1.5}
 .plan-route{fill:none;stroke:#d7b886;stroke-width:1.2;stroke-dasharray:3 5;opacity:.35;pointer-events:none}
 .plan-stop{cursor:pointer;outline:none}.plan-stop circle{fill:#17221b;stroke:#d8be95;stroke-width:1.6;transition:fill .2s,stroke .2s}
@@ -127,7 +127,7 @@ const content = {
     hero:'An image is<br><em>not a wall.</em>',sub:'重返开化 · 让壁画随脚步展开',
     copy:'The stories of Kaihua Temple were never meant to be seen all at once. Enter the hall, circle the altar, and discover what the walls reveal—and what the pillars conceal.',
     enter:'Enter the Hall',archive:'Explore the archive',caption:'A study of architecture, pictorial sequence, and embodied viewing. Spatial model is interpretive; source imagery pending.',
-    tourTitle:'Walk through the image',tourSub:'Move, turn, and watch your line of sight change.',controls:'WASD move · mouse to look · Esc unlock · E inspect',
+    tourTitle:'Walk through the image',tourSub:'Move, turn, and watch your line of sight change.',controls:'WASD walk · Mouse look · 1–4 viewpoints · Esc unlock · E examine',
     guide:'Guided walk',pause:'Pause walk',resume:'Resume walk',reset:'Reset',exit:'Exit',plan:'SPATIAL PLAN',planNote:'Click 1–4 or press number keys · schematic',
     look:'Click or press E to examine ↗',blocked:'SIGHTLINE INTERRUPTED',blockedHint:'Move sideways to see around the pillar or altar.',viewToasts:['South entrance · the altar interrupts the first view.','West aisle · a mural emerges beyond the columns.','North turn · another story enters the view.','East aisle · face the opposite wall.'],steps:[
       ['SOUTH ENTRANCE','The first view is incomplete.','From the doorway, the altar blocks the view of parts of the northern wall.'],
@@ -161,7 +161,7 @@ const content = {
     nav:['项目引言','步入大殿','壁画图录','方法与证据'],kicker:'山西 · 高平 · 北宋',hero:'图像不只是<br><em>一面墙。</em>',sub:'重返开化 · 让壁画随脚步展开',
     copy:'开化寺壁画并非为了被一眼看尽。走入大殿，绕过佛坛，让立柱遮住部分视线，观察一面墙的故事如何隐去，另一面墙又如何展开。',
     enter:'进入大殿',archive:'查看壁画图录',caption:'关于建筑空间、图像叙事与身体观看的交互实验。本版本为空间示意，真实壁画扫描素材尚待接入。',
-    tourTitle:'走入图像之中',tourSub:'前进、转身，观察视线如何变化。',controls:'WASD 移动 · 鼠标转向 · Esc 释放 · E 查看壁画',guide:'自动导览',pause:'暂停导览',resume:'继续导览',reset:'复位',exit:'退出',plan:'空间平面图',planNote:'点击地图 1–4 或按数字键 · 示意图',look:'点击或按 E 查看 ↗',blocked:'视线被建筑遮挡',blockedHint:'向旁边移动，观察佛坛或立柱如何遮挡画面。',viewToasts:['南侧入口：佛坛挡住部分视野。','西侧通道：从柱间观看壁画。','北侧转身：另一面壁画逐渐进入视野。','东侧通道：观察对面墙上的图像。'],
+    tourTitle:'走入图像之中',tourSub:'前进、转身，观察视线如何变化。',controls:'WASD 移动 · 鼠标转向 · 1–4 观察点 · Esc 释放 · E 查看',guide:'自动导览',pause:'暂停导览',resume:'继续导览',reset:'复位',exit:'退出',plan:'空间平面图',planNote:'点击地图 1–4 或按数字键 · 示意图',look:'点击或按 E 查看 ↗',blocked:'视线被建筑遮挡',blockedHint:'向旁边移动，观察佛坛或立柱如何遮挡画面。',viewToasts:['南侧入口：佛坛挡住部分视野。','西侧通道：从柱间观看壁画。','北侧转身：另一面壁画逐渐进入视野。','东侧通道：观察对面墙上的图像。'],
     steps:[['南侧入口','第一眼，无法看见全部。','从殿门向内看，佛坛会挡住部分北壁。'],['西侧通道','西壁随着脚步展开。','移动一点位置，立柱后的叙事细节就会出现。'],['佛坛北侧','转身，另一段故事开始。','前一面墙渐渐退出视线，下一面墙随之显现。'],['东侧通道','图像属于这座建筑。','建筑决定了人以什么顺序与壁画相遇。']],
     archiveTitle:'壁画空间图录',archiveIntro:'四个壁面分区，共同组成一座连续的殿内空间。选择墙面，查看画题、位置与证据。上传真实扫描图后可开启原图／复原对比。',
     wallNames:['西壁','东壁','北壁 · 西次间','北壁 · 东次间'],wallShort:['西壁','东壁','北壁西侧','北壁东侧'],
@@ -273,7 +273,7 @@ function releaseMouse(){if(document.pointerLockElement===renderer.domElement)doc
 function updateMouseHint(){const hint=$('mouse-hint');if(hint)hint.hidden=state.mode!=='explore'||Boolean(state.drawer)||state.guide||document.pointerLockElement===renderer.domElement||matchMedia('(pointer:coarse)').matches;}
 function captureMouse(){if(state.mode!=='explore'||state.drawer||state.guide||matchMedia('(pointer:coarse)').matches)return;
   if(document.pointerLockElement===renderer.domElement)return;
-  try{const lock=renderer.domElement.requestPointerLock?.();if(lock&&typeof lock.catch==='function')lock.catch(()=>updateMouseHint());}catch(e){updateMouseHint();}}
+  try{state.justRequestedLock=true;const lock=renderer.domElement.requestPointerLock?.();if(lock&&typeof lock.catch==='function')lock.catch(()=>{state.justRequestedLock=false;updateMouseHint()});}catch(e){state.justRequestedLock=false;updateMouseHint();}}
 function cancelGuide(){if(state.guide){state.guide=false;state.guidePaused=false;syncOrientationFromCamera();$('guide-label').textContent=content[state.lang].guide;updateMouseHint();}}
 setHomeCamera();
 function applyLang(){const t=content[state.lang];document.documentElement.lang=state.lang==='zh'?'zh-CN':'en';$('language').textContent=state.lang==='en'?'中文':'EN';['nav-home','nav-explore','nav-atlas','nav-method'].forEach((id,i)=>$(id).textContent=t.nav[i]);$('hero-kicker').textContent=t.kicker;$('hero-heading').innerHTML=t.hero;$('hero-subtitle').textContent=t.sub;$('hero-copy').textContent=t.copy;$('enter-label').textContent=t.enter;$('hero-archive').innerHTML=`${t.archive} <span>↗</span>`;$('hero-caption').textContent=t.caption;$('tour-title').textContent=t.tourTitle;$('tour-subtitle').textContent=t.tourSub;$('controls-text').textContent=t.controls;$('guide-label').textContent=state.guide?(state.guidePaused?t.resume:t.pause):t.guide;$('reset-label').textContent=t.reset;$('exit-label').textContent=t.exit;$('plan-label').textContent=t.plan;$('plan-note').textContent=t.planNote;$('look-hint').textContent=t.look;$('mouse-hint').textContent=state.lang==='en'?'Click the hall to resume mouse look · Esc unlocks':'点击大殿继续鼠标转向 · Esc 释放鼠标';$('footnote').textContent=t.foot;$('loading-text').textContent=t.loading;showPositionInfo();if(!$('overlay').hidden)renderDrawer();}
@@ -374,13 +374,14 @@ function bind(){
     px=e.clientX;py=e.clientY;
   });
   renderer.domElement.addEventListener('pointerup',()=>{
-    if(state.mode==='explore'&&!state.dragged&&state.hoverWall!==undefined&&!$('look-label').hidden)setDrawer('atlas',state.hoverWall);
+    if(state.mouseDown&&state.mode==='explore'&&!state.dragged&&state.hoverWall!==undefined&&!$('look-label').hidden)setDrawer('atlas',state.hoverWall);
     state.mouseDown=false;
   });
   renderer.domElement.addEventListener('pointercancel',()=>state.mouseDown=false);
   renderer.domElement.addEventListener('click',()=>{
     if(state.mode!=='explore'||state.drawer)return;
-    if(document.pointerLockElement===renderer.domElement){
+    if(state.justRequestedLock){state.justRequestedLock=false;return}
+   if(document.pointerLockElement===renderer.domElement){
       if(!$('look-label').hidden&&state.hoverWall!==undefined)setDrawer('atlas',state.hoverWall);
     }else captureMouse();
   });
