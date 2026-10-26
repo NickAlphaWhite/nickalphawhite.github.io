@@ -2,7 +2,8 @@ import * as THREE from 'three';
 
 // Photo-guided geometry, not a measured reconstruction. All lengths are model units.
 export function buildHall(scene, renderer) {
-  const occluders=[], obstacles=[], columnCenters=[[-2.72,-2.60],[2.72,-2.60],[-2.72,2.45],[2.72,2.45],[-5.20,4.8],[5.20,4.8]];
+  // Only the four posts around the altar stand in the interior; the side corners are open.
+  const occluders=[], obstacles=[], columnCenters=[[-2.72,-2.60],[2.72,-2.60],[-2.72,2.45],[2.72,2.45]];
   const rng=(()=>{let s=713;return()=>((s=(s*1664525+1013904223)>>>0)/4294967296)})();
   function texture(draw,w=512,h=512){
     const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);
@@ -40,16 +41,77 @@ export function buildHall(scene, renderer) {
   const wood=new THREE.MeshStandardMaterial({map:woodMap,color:'#bdbbb2',roughness:.96});
   const darkWood=new THREE.MeshStandardMaterial({map:woodMap,color:'#817c70',roughness:1});
   const brick=new THREE.MeshStandardMaterial({map:brickMap,color:'#b5af9c',roughness:1});
-  const stone=new THREE.MeshStandardMaterial({color:'#a59e88',roughness:1});
-  const plaster=new THREE.MeshStandardMaterial({color:'#a69e87',roughness:1});
+  const stoneMap=texture((c,w,h)=>{
+    c.fillStyle='#9b978d';c.fillRect(0,0,w,h);
+    for(let i=0;i<18000;i++){const s=70+Math.floor(rng()*100);c.fillStyle=`rgba(${s},${s-2},${s-6},.07)`;c.fillRect(rng()*w,rng()*h,1+rng()*6,1+rng()*6)}
+  });
+  const stone=new THREE.MeshStandardMaterial({map:stoneMap,bumpMap:stoneMap,bumpScale:.015,color:'#bcb8ad',roughness:.97});
+  const plasterMap=texture((c,w,h)=>{
+    c.fillStyle='#ada699';c.fillRect(0,0,w,h);
+    for(let i=0;i<160;i++){
+      const x=rng()*w,width=8+rng()*50,g=c.createLinearGradient(x,0,x+width,0);
+      g.addColorStop(0,'#675e5200');g.addColorStop(.5,`rgba(103,94,82,${rng()*.045})`);g.addColorStop(1,'#675e5200');c.fillStyle=g;c.fillRect(x,0,width,h);
+    }
+    for(let i=0;i<16000;i++){c.fillStyle=rng()>.5?'#ded6c417':'#675f5012';c.fillRect(rng()*w,rng()*h,1+rng()*3,1+rng()*4)}
+  },512,1024);
+  const plaster=new THREE.MeshStandardMaterial({map:plasterMap,bumpMap:plasterMap,bumpScale:.008,color:'#ddd8cb',roughness:1});
   const floorMat=new THREE.MeshStandardMaterial({map:floorMap,roughness:1});
   const painted=new THREE.MeshStandardMaterial({map:paintMap,color:'#c0b69c',roughness:1});
-  const vermilion=new THREE.MeshStandardMaterial({color:'#74372c',roughness:1});
+  const clothMap=texture((c,w,h)=>{
+    c.fillStyle='#8c5147';c.fillRect(0,0,w,h);
+    for(let y=0;y<h;y+=3){c.strokeStyle='rgba(29,20,15,.09)';c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke()}
+    for(let x=0;x<w;x+=3){c.strokeStyle='rgba(206,157,127,.08)';c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke()}
+  });
+  const vermilion=new THREE.MeshStandardMaterial({map:clothMap,color:'#9b766e',roughness:1});
   const gold=new THREE.MeshStandardMaterial({color:'#a48d53',metalness:.42,roughness:.65});
   const goldDark=new THREE.MeshStandardMaterial({color:'#6a582f',metalness:.4,roughness:.79});
+  // Local CC0 scans provide real wear; saturation is reduced in the material shader,
+  // without changing the source files or inventing site-specific historic textures.
+  function muted(material,saturation){
+    material.onBeforeCompile=shader=>{
+      shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>\n diffuseColor.rgb=mix(vec3(dot(diffuseColor.rgb,vec3(.2126,.7152,.0722))),diffuseColor.rgb,${saturation.toFixed(3)});`);
+    };
+    material.customProgramCacheKey=()=>`muted-${saturation}`;
+  }
+  muted(floorMat,.09);muted(brick,.12);muted(wood,.22);muted(darkWood,.18);
+  const loader=new THREE.TextureLoader();
+  async function scannedMaterial(material,asset,repeatX,repeatY,rotation=0,relief=.25){
+    try{
+      const maps=await Promise.all(['Diffuse','nor_gl','Rough'].map(async type=>{
+        const map=await loader.loadAsync(new URL(`./materials/${asset}-${type}.jpg`,import.meta.url).href);
+        map.wrapS=map.wrapT=THREE.RepeatWrapping;map.repeat.set(repeatX,repeatY);map.center.set(.5,.5);map.rotation=rotation;
+        map.anisotropy=renderer.capabilities.getMaxAnisotropy();
+        if(type==='Diffuse')map.colorSpace=THREE.SRGBColorSpace;
+        return map;
+      }));
+      material.map=maps[0];material.normalMap=maps[1];material.normalScale.set(relief,relief);
+      material.roughnessMap=maps[2];material.roughness=1;material.needsUpdate=true;
+    }catch(error){console.warn('Scanned material unavailable:',asset,error)}
+  }
+  // Calibrate the dark scanned albedos to dusty indoor grey, rather than multiplying
+  // them by another dark tint (which made the first PBR pass look almost black).
+  floorMat.color.setRGB(2.05,2.02,1.94);brick.color.setRGB(1.45,1.43,1.37);
+  wood.color.setRGB(1.8,1.72,1.58);darkWood.color.setRGB(1.20,1.16,1.07);
+  const materialsReady=Promise.all([
+    scannedMaterial(floorMat,'short_bricks_floor',5.85,5.675,0,.32),
+    scannedMaterial(brick,'short_bricks_floor',1,1,Math.PI/2,.24),
+    scannedMaterial(wood,'wood_table_worn',1,2,Math.PI/2,.18),
+    scannedMaterial(darkWood,'wood_table_worn',1,2,Math.PI/2,.18)
+  ]);
   const geometries=new Map();
   function box(x,y,z,w,h,d,mat=wood,solid=false){
-    const key=[w,h,d].join('/');if(!geometries.has(key))geometries.set(key,new THREE.BoxGeometry(w,h,d));
+    const key=[w,h,d,mat===brick?'masonry':'standard'].join('/');
+    if(!geometries.has(key)){
+      const geometry=new THREE.BoxGeometry(w,h,d);
+      if(mat===brick){
+        const uv=geometry.attributes.uv,position=geometry.attributes.position,normal=geometry.attributes.normal;
+        for(let i=0;i<uv.count;i++){
+          const nx=Math.abs(normal.getX(i)),ny=Math.abs(normal.getY(i));
+          uv.setXY(i,(nx>.5?position.getZ(i):position.getX(i))/2,(ny>.5?position.getZ(i):position.getY(i))/2);
+        }
+      }
+      geometries.set(key,geometry);
+    }
     const m=new THREE.Mesh(geometries.get(key),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;scene.add(m);if(solid)occluders.push(m);return m;
   }
   function ellipsoid(x,y,z,rx,ry,rz,mat=gold){
@@ -68,8 +130,11 @@ export function buildHall(scene, renderer) {
     m.position.copy(start.add(end).multiplyScalar(.5));m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());occluders.push(m);return m;
   }
   // Raised masonry plinth and narrow stone paving, instead of outlined giant tiles.
-  box(0,-.20,0,12.15,.4,11.7,brick);
-  box(0,-.035,0,11.7,.07,11.35,floorMat);
+  // The old plinth and paving BOTH ended at y=0, causing depth-buffer fighting.
+  // Keep the plinth top at -.09 and use one upward-facing paving surface at 0.
+  const plinth=box(0,-.245,0,12.15,.31,11.7,brick);plinth.name='hall-plinth';
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(11.7,11.35),floorMat);
+  floor.name='hall-floor';floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
   const ground=new THREE.Mesh(new THREE.PlaneGeometry(160,160),new THREE.MeshStandardMaterial({color:'#777665',roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-.43;ground.receiveShadow=true;scene.add(ground);
   // Continuous east and west mural walls, low dado and restrained masonry corners.
   for(const x of [-5.95,5.95]){
@@ -98,10 +163,11 @@ export function buildHall(scene, renderer) {
   }
   // Tall weathered posts stand on square brick podiums, as in the supplied photos.
   for(let i=0;i<columnCenters.length;i++){
-    const [x,z]=columnCenters[i],side=i<4?.96:.7;
-    box(x,.22,z,side,.44,side,brick,true);box(x,.46,z,side+.05,.09,side+.05,stone,true);
-    box(x,.54,z,.49,.08,.49,stone,true);
-    const post=cylinder(x,2.62,z,.205,.235,4.08,wood);occluders.push(post);
+    const [x,z]=columnCenters[i],side=.96;
+    const podium=box(x,.22,z,side,.44,side,brick,true);podium.name='interior-post-podium';
+    box(x,.455,z,side+.015,.03,side+.015,stone,true);
+    box(x,.505,z,.46,.07,.46,stone,true);
+    const post=cylinder(x,2.62,z,.205,.235,4.16,wood);post.name='interior-post';occluders.push(post);
     obstacles.push({x,z,halfX:(side+.05)/2,halfZ:(side+.05)/2});
     box(x,4.66,z,.52,.16,.52,wood);
   }
@@ -228,11 +294,11 @@ export function buildHall(scene, renderer) {
     cylinder(x,2.28,5.92,.16,.19,4.15,wood);box(x,.13,5.92,.58,.26,.58,stone);
   }
   // Broad daylight from the front openings; warm neutral interior rather than green fog.
-  const hemi=new THREE.HemisphereLight('#edece2','#8b8373',2.5);scene.add(hemi);
-  const daylight=new THREE.DirectionalLight('#fff9e9',2.3);daylight.position.set(-3,6,10);daylight.target.position.set(0,1,-1);scene.add(daylight,daylight.target);
+  const hemi=new THREE.HemisphereLight('#e3e7e6','#777268',2.1);scene.add(hemi);
+  const daylight=new THREE.DirectionalLight('#fcfcf4',1.35);daylight.position.set(-3,6,10);daylight.target.position.set(0,1,-1);scene.add(daylight,daylight.target);
   const shadowSize=matchMedia('(pointer:coarse)').matches?1024:2048;
-  daylight.castShadow=true;daylight.shadow.mapSize.set(shadowSize,shadowSize);Object.assign(daylight.shadow.camera,{left:-9,right:9,top:9,bottom:-9,near:.1,far:30});daylight.shadow.normalBias=.035;
-  for(const x of [-3.5,3.5]){const fill=new THREE.PointLight('#e9e0c6',24,14,2);fill.position.set(x,2.6,5.9);scene.add(fill)}
+  daylight.castShadow=true;daylight.shadow.mapSize.set(shadowSize,shadowSize);Object.assign(daylight.shadow.camera,{left:-8,right:8,top:8,bottom:-8,near:.5,far:28});daylight.shadow.normalBias=.018;daylight.shadow.bias=-.00012;daylight.shadow.radius=3;
+  for(const x of [-3.5,3.5]){const fill=new THREE.PointLight('#edf0e8',16,14,2);fill.position.set(x,2.6,5.3);scene.add(fill)}
   const statueFill=new THREE.PointLight('#f3dfad',4,7,2);statueFill.position.set(0,3.1,2.1);scene.add(statueFill);
-  return {occluders,obstacles,columnCenters};
+  return {occluders,obstacles,columnCenters,materialsReady};
 }
