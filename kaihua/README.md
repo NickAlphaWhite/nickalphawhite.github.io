@@ -26,7 +26,7 @@ Place authorized image files in `assets/murals/` (ideally WebP / JPEG with reaso
 }
 ```
 
-Use `original` for the photographed/scanned historic surface, `restored` for the documented digital reconstruction. Both files are required to display the before/after comparison. Each zone can be mapped to a verified measured position later; see `WALLS` in `main.js`. If you have single-wide composites, image-to-zone clipping and UV positioning should be calibrated to the plan.
+Use `original` for the photographed/scanned historic surface, `restored` for the documented digital reconstruction. Both files are required to display the before/after comparison. Each zone can be mapped to a verified measured position later; see `WALLS` in the inline module in `index.html`. If you have single-wide composites, image-to-zone clipping and UV positioning should be calibrated to the plan.
 
 ## Run locally
 
@@ -36,7 +36,7 @@ No npm or build step required. Use a local HTTP server (opening `index.html` dir
 python -m http.server 8080
 ```
 
-Then visit `http://localhost:8080`. The browser needs network access to the pinned Three.js package CDN.
+Then visit `http://localhost:8080`. Three.js 0.180.0 is bundled in `assets/vendor/` with its MIT license; runtime CDN access is not required.
 
 ## Deploy with GitHub Pages
 
@@ -54,7 +54,7 @@ The prototype follows the broad east / west / north mural organization, central 
 
 ## Technical architecture
 
-- JavaScript modules + Three.js 0.180.0 via import map
+- JavaScript modules + Three.js 0.180.0 via local import map
 - Three.js primitive architecture, Lambertian/standard materials, procedural **diagram textures**
 - Client-side raycasting, collisions, Catmull-Rom camera pathway, UI overlays
 - GitHub Pages static hosting (no backend, no user tracking)
@@ -97,3 +97,9 @@ The archive and evidence interface now occupies the **entire viewport**; the rig
 - The schematic architectural model and unsupplied historical images are still labelled as such.
 
 Latest checks: JavaScript source parses, all primary wall-entry paths call the shared occlusion-aware hit test, and the CSS/markup expand to 100% viewport width. Full interactive browser testing and GitHub Pages propagation remain unverified.
+
+## V1.4 — Reliability fixes and published photograph references
+
+Four CC BY 4.0 published photo crops are included and listed in `assets/murals/manifest.json`. Open `assets/murals/index.html` for full credits, license links, processing notes, and attribution uncertainties. The sources call these Kaihua Song murals; the 2018 source has a conflicting Taiyuan geographic description. These samples are explicitly illustrative: their original wall locations and relationship to the wall themes are unverified. Do not use them as a surveyed Gaoping reconstruction. No restored images are supplied.
+
+Original-only images now appear in the archive; asynchronous image completion updates the open viewer. The historic image remains on the 3D wall if a restoration pair is later supplied. Photo aspect ratios are preserved. Fixed comparison labels, language switching after the loading element is removed, drag/tap separation, secondary pointers, keyboard controls on interactive elements, guide/reset movement clearing, navigation highlighting, the raycast crosshair alignment, and short-screen intro clipping. WebGL initialization failures show a static image-records link that also works if the module cannot start. Three.js is bundled locally.
