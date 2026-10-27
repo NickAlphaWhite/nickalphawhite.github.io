@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#101711" />
   <meta name="description" content="Kaihua Temple — an interactive spatial study of murals, architecture, and the moving viewer." />
   <title>KAIHUA — A Walkable Image</title>
-  <link rel="stylesheet" href="./assets/mural-viewer.css?v=20261027-reading2">
+  <link rel="stylesheet" href="./assets/mural-viewer.css?v=20261027-split1">
   <style>
 :root{--bg:#0f1511;--paper:#e9e3d7;--dim:#b5b8ac;--gold:#b8a17d;--accent:#d5b893;--hair:rgba(243,237,218,.20);--serif:Georgia,'Songti SC','Noto Serif CJK SC',serif;--sans:'Helvetica Neue',Arial,'PingFang SC','Microsoft YaHei',sans}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--paper);font-family:var(--sans)}button,a{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:4px}button{color:inherit}#webgl{position:fixed;inset:0;z-index:0}#webgl canvas{display:block;width:100%;height:100%;touch-action:none}#vignette{position:fixed;inset:0;pointer-events:none;z-index:1;background:linear-gradient(90deg,rgba(11,18,15,.92) 0%,rgba(11,18,15,.80) 32%,rgba(11,18,15,.24) 67%,rgba(11,18,15,.18) 100%),radial-gradient(ellipse at 62% 46%,transparent 20%,rgba(4,8,6,.57) 100%);transition:background .5s}body.mode-explore #vignette{background:linear-gradient(180deg,rgba(7,12,9,.60),transparent 24%,transparent 68%,rgba(7,12,9,.72))}
@@ -180,7 +180,7 @@ import {createLookControls} from './assets/look-controls.js';
 import {createHallZoom} from './assets/zoom-controls.js';
 import {loadMuralCatalog,visiblePixel} from './assets/mural-data.js?v=stories1';
 import {createMuralSurfaces} from './assets/mural-scene.js';
-import {createMuralViewer} from './assets/mural-viewer.js?v=20261027-stories1';
+import {createMuralViewer} from './assets/mural-viewer.js?v=20261027-split1';
 import {createMuralInfo} from './assets/mural-info.js?v=stories1';
 import {batchStaticMeshes} from './assets/static-batch.js';
 try {
