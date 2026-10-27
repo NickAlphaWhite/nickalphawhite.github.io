@@ -3,7 +3,7 @@
 Active typography is defined in `../site-shell.css`:
 
 - **Marcellus**: locally hosted regular Latin font, used for the English title, wordmark and navigation. Source: https://fonts.google.com/specimen/Marcellus
-- **LXGW WenKai**: locally hosted WOFF2 subset (919 CJK characters from the current UI and narratives), used for Chinese titles and navigation. Source: https://github.com/lxgw/LxgwWenKai
+- **LXGW WenKai**: locally hosted WOFF2 subset (939 CJK characters from the current UI, About text and narratives), used for Chinese titles and navigation. Source: https://github.com/lxgw/LxgwWenKai
 
 Both fonts retain their original SIL Open Font License notices. Long-form body text keeps the system sans-serif stack; unsupported future characters fall back to system fonts. The browser makes no font-platform requests. Regenerate the WenKai subset when new title characters are added.
 

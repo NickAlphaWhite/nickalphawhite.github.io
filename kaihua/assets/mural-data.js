@@ -1,7 +1,7 @@
 import {muralStories} from '../data/mural-stories.js?v=northwest1';
 let catalogPromise;
 export function loadMuralCatalog(){
-  if(!catalogPromise)catalogPromise=fetch(new URL('../data/murals.json',import.meta.url)).then(async response=>{
+  if(!catalogPromise)catalogPromise=fetch(new URL('../data/murals.json?v=directions1',import.meta.url)).then(async response=>{
     if(!response.ok)throw new Error(`Mural metadata HTTP ${response.status}`);
     const data=await response.json();
     if(data.schemaVersion!==2||data.walls?.length!==3)throw new Error('Expected three prepared mural walls');

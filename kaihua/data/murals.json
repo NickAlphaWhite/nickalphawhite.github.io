@@ -10,8 +10,8 @@
     {
       "id": "left",
       "label": {
-        "zh": "左壁",
-        "en": "Left wall"
+        "zh": "东壁",
+        "en": "East wall"
       },
       "assetId": "b94259ca-f3f6-44a2-8ce4-b09a81d062c6",
       "revision": "77cfb43208f0",
@@ -142,8 +142,8 @@
     {
       "id": "back",
       "label": {
-        "zh": "后壁",
-        "en": "Back wall"
+        "zh": "北壁",
+        "en": "North wall"
       },
       "assetId": "1a82a6f5-c2b1-43a4-ac2a-a7e2440bdd65",
       "revision": "c47d867f7b26",
@@ -313,8 +313,8 @@
     {
       "id": "right",
       "label": {
-        "zh": "右壁",
-        "en": "Right wall"
+        "zh": "西壁",
+        "en": "West wall"
       },
       "assetId": "bb25092e-7bac-405b-87c9-015b60c6d1c0",
       "revision": "ac0d6a7b7e29",
