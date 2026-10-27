@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>开化寺壁画图录</title><link rel="stylesheet" href="../mural-viewer.css?v=20261027-split1">
+<title>开化寺壁画图录</title><link rel="stylesheet" href="../mural-viewer.css?v=20261027-long1">
 <style>html,body{margin:0;height:100%;background:#171918;color:#e1e1d8;font:13px sans-serif}body{display:flex;flex-direction:column}header{display:flex;gap:20px;align-items:center;padding:12px 20px;border-bottom:1px solid #343934}a{color:inherit}main{flex:1;min-height:0;display:flex;flex-direction:column}.mural-toolbar{padding:6px 12px}button{cursor:pointer;font:inherit}</style>
 <header><a href="../../index.html">← 返回大殿</a><span>开化寺 · 壁画图录</span></header>
 <main><div class="mural-toolbar"><nav class="mural-tabs" id="walls"></nav><div class="mural-view-controls"><button id="stories" hidden></button><button id="out" aria-label="缩小">−</button><button id="fit">全图</button><button id="in" aria-label="放大">+</button></div></div><div class="mural-stage" id="viewer" tabindex="0"></div><div id="mural-info-host"></div><p class="mural-status" id="status" role="status"></p></main>
 <script type="module">
-import {loadMuralCatalog} from '../mural-data.js?v=stories1';
-import {createMuralViewer} from '../mural-viewer.js?v=20261027-split1';
+import {loadMuralCatalog} from '../mural-data.js?v=long1';
+import {createMuralViewer} from '../mural-viewer.js?v=20261027-long1';
 import {createMuralInfo} from '../mural-info.js?v=stories1';
 let active;
 try{

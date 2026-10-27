@@ -28,9 +28,10 @@ export function mountMuralHotspots(viewer,wall,OSD,{lang='en',toggle}={}){
     const copy=document.createElement('div');copy.className='story-copy';
     const close=document.createElement('button');close.type='button';close.className='story-close';close.textContent='×';close.setAttribute('aria-label',lang==='zh'?'关闭故事':'Close story');close.onclick=()=>closeCard();
     const heading=document.createElement('h3');heading.textContent=title;
-    const text=document.createElement('p');text.textContent=localize(item.text,lang);copy.append(heading,text);
+    copy.append(heading);
+    for(const paragraph of localize(item.text,lang).split(/\n\s*\n/).filter(Boolean)){const text=document.createElement('p');text.className='story-text';text.textContent=paragraph;copy.append(text)}
     if(item.lookFor){const guide=document.createElement('p'),label=document.createElement('strong');label.textContent=lang==='zh'?'看画线索：':'Look for: ';guide.append(label,document.createTextNode(localize(item.lookFor,lang)));copy.append(guide)}
-    if(item.source?.url&&/^https:\/\//.test(item.source.url)){const source=document.createElement('a');source.className='story-source';source.href=item.source.url;source.textContent=localize(item.source.label,lang)|| (lang==='zh'?'讲解来源':'Source');source.target='_blank';source.rel='noopener noreferrer';copy.append(source)}
+    for(const reference of [item.source,item.textSource])if(reference?.url&&/^https:\/\//.test(reference.url)){const source=document.createElement('a');source.className='story-source';source.href=reference.url;source.textContent=localize(reference.label,lang)|| (lang==='zh'?'讲解来源':'Source');source.target='_blank';source.rel='noopener noreferrer';copy.append(source)}
     if(items.length>1){
       const navigation=document.createElement('nav');navigation.className='story-navigation';navigation.setAttribute('aria-label',lang==='zh'?'切换故事':'Story navigation');
       const previous=document.createElement('button'),next=document.createElement('button'),count=document.createElement('span');

@@ -49,7 +49,7 @@ async function viewerReady(page){await page.waitForFunction(()=>appTest.getDetai
     await page.locator('[data-hotspot="shanyou-weaving"]').click();await page.waitForFunction(()=>appTest.getDetail().getViewer().viewport.getZoom()>2);
     await page.waitForFunction(()=>{const stage=document.querySelector('#deepzoom-stage').getBoundingClientRect(),marker=document.querySelector('.mural-hotspot.is-active').getBoundingClientRect(),panel=document.querySelector('.mural-hotspot-note').getBoundingClientRect();return Math.abs(marker.x+marker.width/2-stage.x-stage.width/4)<2&&Math.abs(marker.y+marker.height/2-stage.y-stage.height/2)<2&&Math.abs(panel.x-stage.x-stage.width/2)<2});
     assert.ok((await page.locator('.mural-hotspot-note h3').textContent()).includes('观织'));
-    assert.equal(await page.locator('.mural-hotspot-note a').getAttribute('href'),'https://www.amsm.pku.edu.cn/info/1038/1193.htm');
+    assert.equal(await page.locator('.mural-hotspot-note a').first().getAttribute('href'),'https://www.amsm.pku.edu.cn/info/1038/1193.htm');
     await page.locator('.story-navigation button').last().click();assert.equal(await page.locator('.mural-hotspot-note').count(),1);assert.ok((await page.locator('.mural-hotspot-note h3').textContent()).includes('观屠'));
     await page.keyboard.press('Escape');assert.equal(await page.locator('.mural-hotspot-note').count(),0);assert.equal(await page.locator('#overlay').isVisible(),true,'First Esc closes story, leaving the mural open');
     await page.waitForFunction(()=>{const stage=document.querySelector('#deepzoom-stage'),canvas=stage.querySelector('.deepzoom-canvas');return !stage.classList.contains('story-reading')&&Math.abs(canvas.clientWidth-stage.clientWidth)<2});

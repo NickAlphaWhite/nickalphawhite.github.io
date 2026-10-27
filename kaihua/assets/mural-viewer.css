@@ -23,9 +23,9 @@
 .story-markers-hidden .mural-hotspot{display:none!important}
 .story-reading .deepzoom-canvas{right:50%}
 .mural-hotspot-note{position:absolute;box-sizing:border-box;left:50%;top:0;bottom:0;width:50%;overflow:auto;padding:clamp(28px,4vw,64px);background:#18221b;color:#e8e9de;border-left:1px solid #596557;z-index:6;font:18px/1.9 sans-serif;display:flex}
-.story-copy{width:100%;max-width:560px;min-width:0;flex:none;margin:auto}
+.story-copy{width:100%;max-width:560px;max-height:100%;min-width:0;flex:none;margin:auto;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#697566 transparent}
 .mural-hotspot-note h3{font-size:26px;margin:0 36px 24px 0}.mural-hotspot-note p{margin:0 0 22px}.mural-hotspot-note .story-close{position:absolute;top:20px;right:24px;background:transparent;border:0;color:inherit;font-size:30px;cursor:pointer;line-height:1;padding:0 2px}
-.story-source{color:#d3b891;font-size:13px;text-underline-offset:3px}
+.story-source{display:block;margin:8px 0;color:#d3b891;font-size:13px;text-underline-offset:3px}
 .story-navigation{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #596557;margin-top:20px;padding-top:16px;font-size:14px}
 .story-navigation button{background:transparent;border:0;color:#e8e9de;font:inherit;padding:4px 0;cursor:pointer}.story-navigation button:disabled{opacity:.35;cursor:default}
 @media(max-width:680px){.mural-detail-open .drawer-top{padding:10px 16px}.mural-toolbar{padding:7px 12px;gap:4px}.mural-tabs button,.mural-view-controls button{padding:7px 8px;font-size:11px}.mural-status{font-size:9px}}
