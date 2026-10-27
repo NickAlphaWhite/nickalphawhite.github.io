@@ -1,0 +1,31 @@
+/* The introduction uses the same locally hosted mural as the hall. */
+body:not(.mode-explore) .topbar{background:#eee9df;border-color:#d4cbbc;color:#292e28}
+body:not(.mode-explore) .brand{color:#292e28}
+body:not(.mode-explore) .brand-seal{color:#766247;border-color:#968268}
+body:not(.mode-explore) .brand small{color:#777365}
+body:not(.mode-explore) .navlink{color:#696a5e}
+body:not(.mode-explore) .navlink.active{color:#292e28}
+body:not(.mode-explore) .tiny-btn{border-color:#aaa497;color:#34382f}
+body:not(.mode-explore) .footline{background:#eee9df;color:#6c6c60;border-color:#d4cbbc}
+.hero{height:100svh;min-height:0;padding:92px 0 44px;display:grid;grid-template-columns:44% 56%;background:#eee9df;color:#30382f;pointer-events:auto}
+.hero-content{position:relative;margin:0;padding:35px clamp(30px,5vw,88px);max-width:none}
+.hero .eyebrow{color:#817356;font-size:9px;letter-spacing:.2em;margin-bottom:40px;line-height:1.8}
+.hero .line{width:26px;flex-shrink:0;background:#a39172}
+.hero h1{font:normal clamp(64px,6.5vw,108px)/1.1 Georgia,'Songti SC',SimSun,serif;letter-spacing:-.055em;color:#30382f;text-shadow:none;margin:0 0 26px}
+html[lang=zh-CN] .hero h1{font-size:clamp(65px,6.9vw,112px);letter-spacing:.09em;white-space:nowrap}
+.hero .hero-zh{color:#817356;font:12px/1.8 var(--sans);letter-spacing:.2em;margin-bottom:25px}
+.hero .hero-copy{font-size:13px;line-height:1.95;color:#66695d;max-width:360px;margin:0 0 34px}
+.hero .hero-cta{align-items:flex-start;gap:24px;flex-wrap:wrap}
+.hero .primary-action{background:#384535;color:#f4efe3;border:1px solid #384535;min-width:200px}
+.hero .primary-action:hover{background:#4b5b46}
+.hero .secondary-action{color:#565c4f;border-color:#aaa28f;margin-top:18px}
+.hero .hero-foot{margin-top:48px;max-width:340px}
+.hero .hero-foot p{color:#8a887a;font-size:10px;line-height:1.9}
+.hero-art{height:100%;min-height:0;margin:0;position:relative;overflow:hidden;background:#726e5b}
+.hero-art img{width:100%;height:100%;display:block;object-fit:cover;object-position:90% 50%}
+.hero-art figcaption{position:absolute;bottom:22px;left:24px;background:#292e28e8;color:#e4dcc8;padding:10px 14px;font-size:9px;letter-spacing:.13em;line-height:1.7}
+.look-label{pointer-events:none;cursor:default}
+body.mouse-paused .crosshair{visibility:hidden}
+@media(max-height:760px) and (min-width:681px){.hero-content{padding-top:20px;padding-bottom:20px}.hero .eyebrow{margin-bottom:22px}.hero h1{font-size:72px;margin-bottom:18px}.hero .hero-copy{margin-bottom:22px}.hero .hero-foot{margin-top:24px}}
+@media(max-width:1050px) and (min-width:681px){.hero{grid-template-columns:48% 52%}.hero-content{padding-left:35px;padding-right:28px}.hero h1{font-size:76px}.hero .hero-cta{gap:6px}.hero .hero-foot{margin-top:28px}}
+@media(max-width:680px){body:not(.mode-explore) .topbar nav{background:#eee9df;border-color:#d4cbbc}.hero{grid-template-columns:1fr;grid-template-rows:minmax(180px,32%) 1fr;padding:109px 0 38px;overflow-y:auto}.hero-art{grid-row:1}.hero-art img{object-position:87% 48%}.hero-art figcaption{bottom:12px;left:20px;font-size:8px;padding:6px 9px}.hero-content{grid-row:2;padding:24px 26px 30px}.hero .eyebrow{margin-bottom:12px;font-size:8px}.hero h1,html[lang=zh-CN] .hero h1{font-size:52px;line-height:1.05;margin-bottom:12px}.hero h1 br{display:none}.hero .hero-zh{font-size:10px;margin-bottom:13px}.hero .hero-copy{font-size:12px;max-width:440px;margin-bottom:19px}.hero .hero-cta{flex-direction:row;align-items:center;gap:20px}.hero .primary-action{min-width:164px;height:45px}.hero .secondary-action{margin-top:0;font-size:11px}.hero .hero-foot{display:none}.look-label{pointer-events:auto;cursor:pointer}}

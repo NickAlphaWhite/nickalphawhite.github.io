@@ -50,8 +50,11 @@ export function createLookControls({element,isEnabled,isGuided,onManualLook,onRo
   listen(element,'click',event=>{
     if(suppressClick){suppressClick=false;return;}
     if(!usable())return;
-    if(onInspect(event.clientX,event.clientY))return;
-    if(event.pointerType!=='touch')onRequestLock();
+    // A desktop click resumes capture first, even when it lands on a mural.
+    // Inspection while captured always uses the crosshair, never cursor coordinates.
+    if(event.pointerType==='touch'){onInspect(event.clientX,event.clientY);return;}
+    if(!locked()){onManualLook();onRequestLock();return;}
+    onInspect();
   });
   listen(doc,'pointerlockchange',()=>{
     reset();
