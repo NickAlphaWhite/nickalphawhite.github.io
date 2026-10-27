@@ -44,7 +44,17 @@ async function viewerReady(page){await page.waitForFunction(()=>appTest.getDetai
   assert.equal(await page.locator('#deepzoom-stage img').count(),0,'No separate fixed preview image');
   if(process.env.KAIHUA_SCREENSHOTS)await page.screenshot({path:path.join(process.env.KAIHUA_SCREENSHOTS,`kaihua-${id}-with-intro.png`)});
   const fit=await page.evaluate(()=>{const v=appTest.getDetail().getViewer(),b=v.viewport.getBounds(),i=v.world.getItemAt(0).getBounds();return b.x<=i.x+.001&&b.y<=i.y+.001&&b.x+b.width>=i.x+i.width-.001&&b.y+b.height>=i.y+i.height-.001});assert.equal(fit,true,'Whole mural fits without clipping');
-  assert.equal(await page.locator('.mural-hotspot').count(),0,'No invented research hotspots');
+  assert.equal(await page.locator('.mural-hotspot').count(),id==='right'?7:0,'Only reviewed story locations are displayed');
+  if(id==='right'){
+    await page.locator('[data-hotspot="shanyou-weaving"]').click();await page.waitForFunction(()=>appTest.getDetail().getViewer().viewport.getZoom()>2);
+    assert.ok((await page.locator('.mural-hotspot-note h3').textContent()).includes('观织'));
+    assert.equal(await page.locator('.mural-hotspot-note a').getAttribute('href'),'https://www.amsm.pku.edu.cn/info/1038/1193.htm');
+    await page.locator('.story-navigation button').last().click();assert.equal(await page.locator('.mural-hotspot-note').count(),1);assert.ok((await page.locator('.mural-hotspot-note h3').textContent()).includes('观屠'));
+    await page.keyboard.press('Escape');assert.equal(await page.locator('.mural-hotspot-note').count(),0);assert.equal(await page.locator('#overlay').isVisible(),true,'First Esc closes story, leaving the mural open');
+    await page.locator('#mural-stories').click();assert.equal(await page.locator('.mural-hotspot:visible').count(),0);await page.locator('#mural-stories').click();assert.equal(await page.locator('.mural-hotspot').count(),7);
+    await page.locator('#mural-fit').click();await page.waitForFunction(()=>!appTest.getDetail().getViewer().isAnimating());
+    if(process.env.KAIHUA_SCREENSHOTS)await page.screenshot({path:path.join(process.env.KAIHUA_SCREENSHOTS,'kaihua-story-map.png')});
+  }
   const before=await page.evaluate(()=>{window.oldDetail=appTest.getDetail();return {position:appTest.camera.position.toArray(),rotation:appTest.camera.quaternion.toArray(),fov:appTest.camera.fov}});
   await page.keyboard.press('Escape');assert.equal(await page.locator('#overlay').isVisible(),false);
   const after=await page.evaluate(()=>({position:appTest.camera.position.toArray(),rotation:appTest.camera.quaternion.toArray(),fov:appTest.camera.fov}));assert.deepEqual(after,before,'Closing preserves camera pose and optical zoom');assert.equal(await page.evaluate(()=>oldDetail.getViewer()),null,'Viewer is destroyed on close');
@@ -59,8 +69,9 @@ async function viewerReady(page){await page.waitForFunction(()=>appTest.getDetai
   const normal=new THREE.Vector3(0,0,1).applyQuaternion(m.quaternion);t.camera.position.copy(target.clone().add(normal));t.camera.lookAt(target);t.syncOrientationFromCamera();return !t.inspectWall();
  });assert.equal(margin,true,'Transparent source margin does not open the archive');
  // Native pyramid chooses screen-sized initial detail; wheel loads source level 2.
+ const detailRequestsStart=requests.length;
  await page.evaluate(()=>{appTest.jumpToView(1);appTest.setDrawer('atlas',0)});await viewerReady(page);
- const tileLevels=()=>requests.filter(url=>url.includes('zoom_files/')).map(url=>Number(url.split('zoom_files/')[1].split('/')[0]));
+ const tileLevels=()=>requests.slice(detailRequestsStart).filter(url=>url.includes('zoom_files/')).map(url=>Number(url.split('zoom_files/')[1].split('/')[0]));
  const initialMax=Math.max(...tileLevels());assert.ok(initialMax<=13&&initialMax>=11,'Initial tiles match viewport, not forced half-resolution whole-wall downloads');
  const stage=page.locator('#deepzoom-stage'),box=await stage.boundingBox();await page.mouse.move(box.x+box.width*.45,box.y+box.height*.55);
  // OSD normalizes each wheel event to a zoom step, regardless of its raw delta.

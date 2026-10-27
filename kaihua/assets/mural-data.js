@@ -1,3 +1,4 @@
+import {muralStories} from '../data/mural-stories.js';
 let catalogPromise;
 export function loadMuralCatalog(){
   if(!catalogPromise)catalogPromise=fetch(new URL('../data/murals.json',import.meta.url)).then(async response=>{
@@ -12,6 +13,7 @@ export function loadMuralCatalog(){
     for(const wall of data.walls){
       if(!['left','back','right'].includes(wall.id)||!wall.width||!wall.height)throw new Error('Invalid mural wall');
       wall.previewUrl=resolve(wall.preview);wall.fullPreviewUrl=resolve(wall.fullPreview);wall.dziUrl=resolve(wall.dzi);
+      wall.hotspots=[...(wall.hotspots||[]),...(muralStories[wall.id]||[])];
       wall.regions=wall.regions.map(region=>({...region,textureUrl:resolve(region.texture)}));
     }
     return {...data,resolve};

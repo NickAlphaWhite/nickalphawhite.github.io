@@ -1,23 +1,43 @@
-// Coordinates are fractions of the ORIGINAL full source width and height.
-// The default catalog contains no research claims or invented hotspots.
-export function mountMuralHotspots(viewer,wall,OSD){
-  const cleanup=[],image=viewer.world.getItemAt(0);if(!image)return()=>{};
-  for(const item of wall.hotspots||[]){
-    if(!Number.isFinite(item.x)||!Number.isFinite(item.y)||item.x<0||item.x>1||item.y<0||item.y>1||typeof item.title!=='string')continue;
-    const button=document.createElement('button');button.type='button';button.className='mural-hotspot';button.textContent='+';button.setAttribute('aria-label',item.title);button.dataset.hotspot=item.id;
-    const location=image.imageToViewportCoordinates(item.x*wall.width,item.y*wall.height);
-    viewer.addOverlay({element:button,location,placement:OSD.Placement.CENTER,checkResize:false});
-    let popup;
-    function show(){
-      popup?.remove();popup=document.createElement('section');popup.className='mural-hotspot-note';popup.setAttribute('role','dialog');
-      const close=document.createElement('button');close.type='button';close.textContent='×';close.setAttribute('aria-label','Close');close.onclick=()=>{popup.remove();button.focus()};
-      const title=document.createElement('h3');title.textContent=item.title;
-      const text=document.createElement('p');text.textContent=typeof item.text==='string'?item.text:'';
-      popup.append(close,title,text);viewer.container.append(popup);close.focus();
+const localize=(value,lang)=>typeof value==='string'?value:value?.[lang]||value?.zh||value?.en||'';
+// One card per viewer. Markers use the full source image's normalized coordinates.
+export function mountMuralHotspots(viewer,wall,OSD,{lang='en',toggle}={}){
+  const image=viewer.world.getItemAt(0);if(!image)return()=>{};
+  const host=viewer.container.closest('.mural-stage')||viewer.container.parentElement;
+  const items=(wall.hotspots||[]).filter(item=>Number.isFinite(item.x)&&Number.isFinite(item.y)&&item.x>=0&&item.x<=1&&item.y>=0&&item.y<=1&&localize(item.title,lang));
+  const markers=[],trackers=[];let popup,selected=-1,visible=true;
+  function closeCard(focus=true){popup?.remove();popup=null;for(const button of markers){button.classList.remove('is-active');button.setAttribute('aria-expanded','false')}if(focus&&selected>=0)markers[selected]?.focus({preventScroll:true})}
+  function show(index){
+    closeCard(false);selected=index;const item=items[index],title=localize(item.title,lang),button=markers[index];
+    button.classList.add('is-active');button.setAttribute('aria-expanded','true');
+    if(item.region){
+      const r=item.region,area=image.imageToViewportRectangle(r.x*wall.width,r.y*wall.height,r.width*wall.width,r.height*wall.height);
+      const padded=new OSD.Rect(area.x-area.width*.2,area.y-area.height*.2,area.width*1.4,area.height*1.4);
+      viewer.viewport.fitBounds(padded);viewer.viewport.applyConstraints();
     }
-    const tracker=new OSD.MouseTracker({element:button,clickHandler:event=>{event.preventDefaultAction=true;show()}}).setTracking(true);
-    button.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();show()}});
-    cleanup.push(()=>{tracker.destroy();popup?.remove();viewer.removeOverlay(button);button.remove()});
+    popup=document.createElement('section');popup.className='mural-hotspot-note';popup.setAttribute('role','dialog');popup.setAttribute('aria-label',title);
+    const close=document.createElement('button');close.type='button';close.className='story-close';close.textContent='×';close.setAttribute('aria-label',lang==='zh'?'关闭故事':'Close story');close.onclick=()=>closeCard();
+    const heading=document.createElement('h3');heading.textContent=title;
+    const text=document.createElement('p');text.textContent=localize(item.text,lang);popup.append(close,heading,text);
+    if(item.lookFor){const guide=document.createElement('p'),label=document.createElement('strong');label.textContent=lang==='zh'?'看画线索：':'Look for: ';guide.append(label,document.createTextNode(localize(item.lookFor,lang)));popup.append(guide)}
+    if(item.source?.url&&/^https:\/\//.test(item.source.url)){const source=document.createElement('a');source.className='story-source';source.href=item.source.url;source.textContent=localize(item.source.label,lang)|| (lang==='zh'?'讲解来源':'Source');source.target='_blank';source.rel='noopener noreferrer';popup.append(source)}
+    if(items.length>1){
+      const navigation=document.createElement('nav');navigation.className='story-navigation';navigation.setAttribute('aria-label',lang==='zh'?'切换故事':'Story navigation');
+      const previous=document.createElement('button'),next=document.createElement('button'),count=document.createElement('span');
+      previous.type=next.type='button';previous.textContent=lang==='zh'?'← 上一个':'← Previous';next.textContent=lang==='zh'?'下一个 →':'Next →';previous.disabled=index===0;next.disabled=index===items.length-1;
+      previous.onclick=()=>show(index-1);next.onclick=()=>show(index+1);count.textContent=`${index+1} / ${items.length}`;navigation.append(previous,count,next);popup.append(navigation);
+    }
+    // Sibling of the OSD interaction area: reading/clicking the card cannot pan the art.
+    host.append(popup);close.focus({preventScroll:true});
   }
-  return()=>cleanup.forEach(remove=>remove());
+  for(const [index,item] of items.entries()){
+    const button=document.createElement('button');button.type='button';button.className='mural-hotspot';button.textContent=String(item.order||index+1);button.title=localize(item.title,lang);button.setAttribute('aria-label',localize(item.title,lang));button.setAttribute('aria-expanded','false');button.dataset.hotspot=item.id;markers.push(button);
+    viewer.addOverlay({element:button,location:image.imageToViewportCoordinates(item.x*wall.width,item.y*wall.height),placement:OSD.Placement.CENTER,checkResize:false});
+    trackers.push(new OSD.MouseTracker({element:button,clickHandler:event=>{event.preventDefaultAction=true;if(event.quick!==false)show(index)}}).setTracking(true));
+    button.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();show(index)}});
+  }
+  function escape(event){if(event.key==='Escape'&&popup){event.preventDefault();event.stopPropagation();closeCard()}}
+  function toggleMarkers(){visible=!visible;host.classList.toggle('story-markers-hidden',!visible);toggle.setAttribute('aria-pressed',String(visible));if(!visible)closeCard(false)}
+  host.addEventListener('keydown',escape,true);
+  if(toggle){toggle.hidden=!items.length;toggle.textContent=(lang==='zh'?'故事点':'Stories')+` · ${items.length}`;toggle.setAttribute('aria-pressed','true');toggle.addEventListener('click',toggleMarkers)}
+  return()=>{closeCard(false);host.removeEventListener('keydown',escape,true);host.classList.remove('story-markers-hidden');toggle?.removeEventListener('click',toggleMarkers);if(toggle)toggle.hidden=true;trackers.forEach(tracker=>tracker.destroy());markers.forEach(button=>{viewer.removeOverlay(button);button.remove()})};
 }
