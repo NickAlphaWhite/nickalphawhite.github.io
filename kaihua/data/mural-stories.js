@@ -335,6 +335,150 @@ export const muralStories={
         ],
         "figure": "Yang et al. 2022, figure 2a"
       }
+    },
+    {
+      "id": "deer-maiden-lotus-path",
+      "order": 4,
+      "x": 0.0358,
+      "y": 0.742,
+      "region": {
+        "x": 0.004623851880667125,
+        "y": 0.5757874351768181,
+        "width": 0.062404700231610204,
+        "height": 0.3497884500937365
+      },
+      "title": {
+        "zh": "借火寻路，步步生莲",
+        "en": "A path of lotus flowers"
+      },
+      "text": {
+        "zh": "这段故事从山林中的一件小事展开。《报恩经》说，一位鹿所生的女孩被南窟仙人收养，在山中渐渐长大。一天，家中保存的火种熄灭，父亲让她前往北窟借火。鹿女沿山路行走，脚步所经之处不断生出莲花，留下了一条与寻常足迹不同的道路。\n\n北窟仙人看见这一奇异景象，让她绕着住处行走，莲花于是环绕草庐排列。后来，入山游猎的波罗奈王发现这些花，询问它们从何而来，得知了鹿女的身世，又前往南窟拜访。一次借火的往返，便成为故事从山林转向王宫的契机。\n\n看画时，可以先找红衣女子和她脚边曲折排列的花朵，再沿花路寻找上下两处草庐。相似的建筑与人物在不同位置重复出现，表现先后发生的拜访；不必把它们误认成同一时刻聚在一起的人群。莲花既是神异的标志，也是引导观众读完这一段的路径。",
+        "en": "The episode begins with a small household problem. In the ancient sutra, a girl born to a deer is brought up by the hermit of the southern cave. When the household fire goes out, he sends her to the northern cave for an ember. Lotus flowers spring up beneath her feet as she walks.\n\nThe northern hermit asks her to walk around his dwelling, leaving flowers around it. Later, the King of Varanasi encounters the lotus trail while hunting. He asks about its origin and visits the girl’s foster father. A journey to borrow fire becomes the turning point between life in the mountains and life at court.\n\nFind the red-robed girl and follow the winding flowers between the two huts. Repeated buildings and groups represent successive visits rather than a single crowd gathered at one moment. The flowers are both a miraculous sign and a route through the painted narrative."
+      },
+      "lookFor": {
+        "zh": "从红衣女子脚下的莲花出发，沿曲折花路寻找上下两处草庐及迎接来客的人物。",
+        "en": "Start at the red-robed girl’s feet and follow the flowers between the huts and their visitors."
+      },
+      "source": {
+        "label": {
+          "zh": "谷东方 · 故宫博物院院刊（2009）",
+          "en": "Gu Dongfang · Palace Museum Journal (2009)"
+        },
+        "url": "https://www.dpm.org.cn/Uploads/File/pdf/a5/81/99/a581999714d6217fb9a62f6b805f9fcb.pdf",
+        "caption": "图七十二 · 第49场面"
+      },
+      "verification": {
+        "method": "feature-match-and-visual-review",
+        "inliers": 18,
+        "referenceSize": [
+          6568,
+          2317
+        ],
+        "figure": "图七十二 · 第49场面"
+      },
+      "textSource": {
+        "label": {
+          "zh": "故事依据：《大方便佛报恩经》卷三·论议品",
+          "en": "Narrative: Sutra on Repaying Kindness, fascicle 3"
+        },
+        "url": "https://cbetaonline.dila.edu.tw/zh/T0156_003"
+      }
+    },
+    {
+      "id": "deer-maiden-royal-procession",
+      "order": 5,
+      "x": 0.0548,
+      "y": 0.5395,
+      "region": {
+        "x": 0.018311742162297907,
+        "y": 0.4550202245798716,
+        "width": 0.07568498186304276,
+        "height": 0.17861779105524386
+      },
+      "title": {
+        "zh": "仪仗迎归，离开山林",
+        "en": "Leaving the mountains with the king"
+      },
+      "text": {
+        "zh": "顺着借火的故事往下读，鹿女的人生开始转向。波罗奈王来到南窟，见到鹿女后向养育她的仙人求婚。《报恩经》接着叙述，国王带她离开山中，以象乘、随从和音乐组成的队伍返回本国；后来，她在宫中被立为第一夫人，称为鹿母夫人。\n\n这一段中的热闹仪仗，与先前草庐周围的山林生活形成鲜明差别。故事并未停留在相遇本身，而是用一场出行把人物带进另一种生活。经文还写到仙人在高处遥望女儿离去，那是邻近情节的背景，不应把此处每个模糊的山中人物都直接认作她的父亲。\n\n在画面中，先看伞盖下的主要人物，再向两侧寻找持扇、执杖与举旗的随从。仪仗器物将原本分散的人物连成一个队列，提示这是一段迎送与行进的场面。可以把它与前一则的曲折花路比较：前者用莲花引导步行，这里改用队伍的方向组织观看。",
+        "en": "The king visits the southern cave and asks the maiden’s foster father for her hand. The sutra then describes their journey out of the mountains: an elephant, attendants and music accompany them back to the kingdom. At court, she becomes the chief queen, known as the Deer Mother.\n\nThe procession marks a change from the secluded life around the huts to the public world of the palace. A neighboring episode in the text describes the hermit watching her departure from a height. That context does not justify identifying every damaged figure in the painted hills as her father.\n\nBegin with the figures beneath the canopies, then follow the attendants carrying fans, staffs and banners. Their equipment and orientation link them into a moving group. Compare this procession with the preceding lotus trail: one scene guides the eye through flowers, the other through the arrangement of people."
+      },
+      "lookFor": {
+        "zh": "先找伞盖，再沿两侧持扇、执杖与举旗的人物读出迎送队列。",
+        "en": "Locate the canopies, then follow the fans, staffs and banners along the procession."
+      },
+      "source": {
+        "label": {
+          "zh": "谷东方 · 故宫博物院院刊（2009）",
+          "en": "Gu Dongfang · Palace Museum Journal (2009)"
+        },
+        "url": "https://www.dpm.org.cn/Uploads/File/pdf/cf/02/de/cf02de6ca84d1b693fd5e9babcb53416.pdf",
+        "caption": "图七十三 · 第50场面"
+      },
+      "verification": {
+        "method": "feature-match-and-visual-review",
+        "inliers": 13,
+        "referenceSize": [
+          6568,
+          2317
+        ],
+        "figure": "图七十三 · 第50场面"
+      },
+      "textSource": {
+        "label": {
+          "zh": "故事依据：《大方便佛报恩经》卷三·论议品",
+          "en": "Narrative: Sutra on Repaying Kindness, fascicle 3"
+        },
+        "url": "https://cbetaonline.dila.edu.tw/zh/T0156_003"
+      }
+    },
+    {
+      "id": "deer-maiden-lotus-princes",
+      "order": 6,
+      "x": 0.0287,
+      "y": 0.477,
+      "region": {
+        "x": 0.004795916333123043,
+        "y": 0.3673086483312878,
+        "width": 0.04796044544819357,
+        "height": 0.15997019419137085
+      },
+      "title": {
+        "zh": "莲池之中，五百太子",
+        "en": "The princes within the lotus"
+      },
+      "text": {
+        "zh": "鹿女进入王宫以后，故事又出现了意想不到的变化。《报恩经》讲，她怀孕期满，生下的竟是一朵莲花。国王原本期待继承人，见到莲花却十分恼怒，命人将它遗弃。这个神异的出生情节，为后来的五百太子故事埋下了伏笔。\n\n过了几日，国王与群臣游园，发现水中有一朵光彩夺目的莲花，便让人取来观看。花朵展开后，每一片花叶之下都有一个男孩，共有五百人。国王于是重新认识到鹿母夫人的不凡，母子得以相聚；经文随后还讲述这些太子长大后出家修行的经历。\n\n这处壁画并没有将五百名孩子逐一画出来。依据研究中的图像辨识，画师以池水、盛开的莲花及池边的国王和侍从，提炼出发现莲花的关键场景。观看时可从池边的栏杆向下寻找花朵，再回到众人的视线方向；画面中没有清楚呈现的婴儿细节，不宜自行补认。",
+        "en": "After the maiden enters the palace, the sutra introduces another unexpected event: she gives birth to a lotus flower. The king, expecting an heir, becomes angry and orders it to be thrown away. The miraculous birth prepares the story of the five hundred princes.\n\nSeveral days later, he visits the garden with his attendants and notices a radiant lotus in the water. When it is brought to him and opened, a boy appears beneath each of its five hundred petals. Mother and children are reunited. The text later describes the princes growing up and entering religious life.\n\nThe painting does not individually portray five hundred children. The published study identifies a pool, a large lotus, the king and his attendants as the condensed scene of discovery. Follow the railing down toward the flower, then return to the surrounding figures’ attention. Do not invent infant details where the surviving paint does not clearly show them."
+      },
+      "lookFor": {
+        "zh": "沿池边栏杆向下寻找莲花，再看国王和侍从如何围绕水池展开；不用逐一寻找五百个孩子。",
+        "en": "Follow the railing down to the lotus, then look at the king and attendants arranged around the pool."
+      },
+      "source": {
+        "label": {
+          "zh": "谷东方 · 故宫博物院院刊（2009）",
+          "en": "Gu Dongfang · Palace Museum Journal (2009)"
+        },
+        "url": "https://www.dpm.org.cn/Uploads/File/pdf/9d/5a/da/9d5ada8e7242107d7d0fb143b7633a07.pdf",
+        "caption": "图七十五 · 第52场面"
+      },
+      "verification": {
+        "method": "feature-match-and-visual-review",
+        "inliers": 9,
+        "referenceSize": [
+          6568,
+          2317
+        ],
+        "figure": "图七十五 · 第52场面"
+      },
+      "textSource": {
+        "label": {
+          "zh": "故事依据：《大方便佛报恩经》卷三·论议品",
+          "en": "Narrative: Sutra on Repaying Kindness, fascicle 3"
+        },
+        "url": "https://cbetaonline.dila.edu.tw/zh/T0156_003"
+      }
     }
   ],
   "right": [

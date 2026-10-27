@@ -100,7 +100,7 @@
 .hall-zoom-tools button{background:transparent;border:0;color:#e7ddc7;padding:9px 12px;font-size:12px}.hall-zoom-tools button:disabled{opacity:.35;cursor:default}
 @media(max-width:680px){.hall-zoom-tools{right:20px;top:215px}.image-zoom-tools{font-size:10px}}
 </style>
-  <link rel="stylesheet" href="./assets/cover.css?v=cover1">
+  <link rel="stylesheet" href="./assets/cover.css?v=art2">
   <script type="importmap">
     {"imports":{"three":"./assets/vendor/three.module.min.js"}}
   </script>
@@ -132,7 +132,7 @@
         <div class="hero-cta"><button id="enter" class="primary-action"><span id="enter-label">Enter the Hall</span><span class="action-arrow">↗</span></button><button class="secondary-action" id="hero-archive">Explore the archive <span>↗</span></button></div>
         <div class="hero-foot"><span class="micro-rule"></span><p id="hero-caption">A study of architecture, pictorial sequence, and embodied viewing. Published mural details are displayed as references; wall positions remain unverified.</p></div>
       </div>
-      <figure class="hero-art"><img id="cover-mural" alt="开化寺壁画局部" decoding="async"><figcaption>开化寺 · 壁画局部<br>KAIHUA TEMPLE · MURAL DETAIL</figcaption></figure>
+      <figure class="hero-art" aria-hidden="true"><img id="cover-mural" alt="" decoding="async"></figure>
     </section>
 
     <section id="explore-ui" class="explore-ui" hidden aria-label="Interactive temple walk">
@@ -178,10 +178,10 @@ import * as THREE from 'three';
 import {buildHall} from './assets/hall.js';
 import {createLookControls} from './assets/look-controls.js?v=resume2';
 import {createHallZoom} from './assets/zoom-controls.js';
-import {loadMuralCatalog,visiblePixel} from './assets/mural-data.js?v=walls2';
+import {loadMuralCatalog,visiblePixel} from './assets/mural-data.js?v=northwest1';
 import {createMuralSurfaces} from './assets/mural-scene.js';
 import {createMuralViewer} from './assets/mural-viewer.js?v=20261027-long1';
-import {createMuralInfo} from './assets/mural-info.js?v=walls2';
+import {createMuralInfo} from './assets/mural-info.js?v=northwest1';
 import {batchStaticMeshes} from './assets/static-batch.js';
 try {
 
@@ -193,8 +193,8 @@ try {
 const $ = (id) => document.getElementById(id);
 const content = {
   en: {
-    nav:['Introduction','Walk the Hall','Wall Archive','Process & Evidence'], kicker:'SHANXI · CHINA · NORTHERN SONG',
-    hero:'Kaihua<br>Temple',sub:'A WALK THROUGH THE MURALS',
+    nav:['Home','Walk the Hall','Murals','About'], kicker:'SHANXI · CHINA · NORTHERN SONG',
+    hero:'Kaihua<br>Temple',sub:'A thousand years, within these walls.',
     copy:'Step inside the hall and discover its painted stories. Walk between the walls, explore the details, and follow the numbered stories through the murals.',
     enter:'Enter the Hall',archive:'Explore the archive',caption:'A study of architecture, pictorial sequence, and embodied viewing. Spatial model is interpretive; Three digitized walls are presented in their architectural setting; the geometry remains schematic.',
     tourTitle:'Walk through the image',tourSub:'Move, turn, and watch your line of sight change.',controls:'WASD walk · Mouse look · Wheel zoom · 1–4 viewpoints · Esc unlock · E examine',
@@ -228,7 +228,7 @@ const content = {
     foot:'Interpretive prototype · not a measured reconstruction',assetTag:'AWAITING SOURCE MATERIAL',toastScan:'The original/restored image has not been added yet.',toastGuide:'Move the mouse to look. Use WASD to walk; Esc releases the cursor.',toastEnd:'Guided walk complete. You can keep exploring freely.',loading:'Preparing the hall'
   },
   zh: {
-    nav:['项目引言','步入大殿','壁画图录','方法与证据'],kicker:'山西 · 高平 · 北宋',hero:'开化寺',sub:'走入大殿，读懂壁画里的故事',
+    nav:['首页','步入大殿','壁画图录','关于'],kicker:'山西 · 高平 · 北宋',hero:'开化寺',sub:'走入大殿，与壁上千年相遇。',
     copy:'穿行于殿内，在柱间与壁画相遇。靠近一面墙，放大画中的细节，点开故事标记，慢慢读懂山水、楼阁与人物之间的叙事。',
     enter:'进入大殿',archive:'查看壁画图录',caption:'关于建筑空间、图像叙事与身体观看的交互实验。已接入三面数字壁画；建筑尺寸仍为空间示意。',
     tourTitle:'走入图像之中',tourSub:'前进、转身，观察视线如何变化。',controls:'WASD 移动 · 鼠标转向 · 滚轮缩放 · 1–4 观察点 · Esc 释放 · E 查看',guide:'自动导览',pause:'暂停导览',resume:'继续导览',reset:'复位',exit:'退出',plan:'空间平面图',planNote:'点击地图 1–4 或按数字键 · 示意图',look:'点击或按 E 查看 ↗',blocked:'视线被建筑遮挡',blockedHint:'向旁边移动，观察佛坛或立柱如何遮挡画面。',viewToasts:['南侧入口：佛坛挡住部分视野。','西侧通道：从柱间观看壁画。','北侧转身：另一面壁画逐渐进入视野。','东侧通道：观察对面墙上的图像。'],
@@ -254,7 +254,7 @@ const sources = [
  'https://www.amsm.pku.edu.cn/info/1038/1193.htm',
   'https://camlab.fas.harvard.edu/project/digital-temple/'
 ];
-const state = {lang:'en',mode:'home',activeWall:0,mouseDown:false,dragged:false,guide:false,guidePaused:false,guideT:0,yaw:0,pitch:0,assets:{},positions:new Set(),keys:new Set(),touch:new Set(),available:{}};
+const state = {lang:navigator.language.toLowerCase().startsWith('zh')?'zh':'en',mode:'home',activeWall:0,mouseDown:false,dragged:false,guide:false,guidePaused:false,guideT:0,yaw:0,pitch:0,assets:{},positions:new Set(),keys:new Set(),touch:new Set(),available:{}};
 const camera = new THREE.PerspectiveCamera(64,window.innerWidth/window.innerHeight,.08,100);
 const scene = new THREE.Scene(); scene.background = new THREE.Color('#847b66'); scene.fog = new THREE.FogExp2('#a39880',.008);
 const renderer = new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
@@ -317,7 +317,7 @@ function captureMouse(){
 }
 function cancelGuide(){if(state.guide){state.guide=false;state.guidePaused=false;syncOrientationFromCamera();$('guide-label').textContent=content[state.lang].guide;updateMouseHint();}}
 setHomeCamera();
-function applyLang(){const t=content[state.lang];document.documentElement.lang=state.lang==='zh'?'zh-CN':'en';$('language').textContent=state.lang==='en'?'中文':'EN';['nav-home','nav-explore','nav-atlas','nav-method'].forEach((id,i)=>$(id).textContent=t.nav[i]);$('hero-kicker').textContent=t.kicker;$('hero-heading').innerHTML=t.hero;$('hero-subtitle').textContent=t.sub;$('hero-copy').textContent=t.copy;$('enter-label').textContent=t.enter;$('hero-archive').innerHTML=`${t.archive} <span>↗</span>`;$('hero-caption').textContent=t.caption;$('tour-title').textContent=t.tourTitle;$('tour-subtitle').textContent=t.tourSub;$('controls-text').textContent=t.controls;
+function applyLang(){const t=content[state.lang];document.documentElement.lang=state.lang==='zh'?'zh-CN':'en';$('brand').querySelector('strong').textContent=state.lang==='zh'?'开化寺':'KAIHUA';$('language').textContent=state.lang==='en'?'中文':'EN';['nav-home','nav-explore','nav-atlas','nav-method'].forEach((id,i)=>$(id).textContent=t.nav[i]);$('hero-kicker').textContent=t.kicker;$('hero-heading').innerHTML=t.hero;$('hero-subtitle').textContent=t.sub;$('hero-copy').textContent=t.copy;$('enter-label').textContent=t.enter;$('hero-archive').innerHTML=`${t.archive} <span>↗</span>`;$('hero-caption').textContent=t.caption;$('tour-title').textContent=t.tourTitle;$('tour-subtitle').textContent=t.tourSub;$('controls-text').textContent=t.controls;
 for(const [id,en,zh] of [['hall-zoom-in','Zoom in','放大'],['hall-zoom-out','Zoom out','缩小'],['hall-zoom-reset','Reset zoom','复位缩放']]){$(id).setAttribute('aria-label',state.lang==='zh'?zh:en);$(id).title=state.lang==='zh'?zh:en}
 $('guide-label').textContent=state.guide?(state.guidePaused?t.resume:t.pause):t.guide;$('reset-label').textContent=t.reset;$('exit-label').textContent=t.exit;$('plan-label').textContent=t.plan;$('plan-note').textContent=t.planNote;$('look-hint').textContent=t.look;$('mouse-hint').textContent=state.lang==='en'?'Click the hall to resume mouse look · Esc unlocks':'点击大殿继续鼠标转向 · Esc 释放鼠标';$('footnote').textContent=t.foot;if($('loading-text'))$('loading-text').textContent=t.loading;showPositionInfo();if(!$('overlay').hidden){$('close-label').textContent=state.mode==='explore'?t.returnHall:t.returnIntro;renderDrawer();}}
 function clearDrawer(){
@@ -336,7 +336,6 @@ function setDrawer(view,wall=state.activeWall){
  releaseMouse();state.keys.clear();state.touch.clear();
  state.drawer=view;state.activeWall=wall;
  $('overlay').hidden=false;$('overlay').classList.toggle('mural-detail-open',view==='atlas');
- $('drawer-kicker').textContent=view==='atlas'?'KAIHUA / WALL ARCHIVE':'KAIHUA / METHOD & EVIDENCE';
  $('close-label').textContent=state.mode==='explore'?content[state.lang].returnHall:content[state.lang].returnIntro;
  $('drawer-body').scrollTop=0;
  renderDrawer();updateMouseHint();
@@ -346,11 +345,12 @@ function escapeHTML(value){return String(value).replace(/[&<>"']/g,char=>({'&':'
 function renderDrawer(){
  detailViewer?.destroy();detailViewer=null;detailWallId=null;
  const t=content[state.lang],body=$('drawer-body');
+ $('drawer-kicker').textContent=state.lang==='zh'?(state.drawer==='atlas'?'开化寺 / 壁画图录':'开化寺 / 方法与证据'):(state.drawer==='atlas'?'KAIHUA / WALL ARCHIVE':'KAIHUA / METHOD & EVIDENCE');
  if(state.drawer==='atlas'){
   if(!muralCatalog){body.innerHTML='<p class="mural-status">'+(state.lang==='zh'?'正在载入壁画资源…':'Loading mural resources…')+'</p>';return;}
   const id=WALLS[state.activeWall]?.muralId||muralCatalog.walls[0].id,wall=muralCatalog.walls.find(item=>item.id===id);
   detailWallId=wall.id;
-  $('drawer-kicker').textContent='KAIHUA / '+wall.label[state.lang];
+  $('drawer-kicker').textContent=(state.lang==='zh'?'开化寺 / ':'KAIHUA / ')+wall.label[state.lang];
   body.innerHTML=`<section class="mural-detail" aria-label="${escapeHTML(wall.label[state.lang])}"><h2 id="drawer-heading" class="mural-detail-title">${escapeHTML(wall.label[state.lang])}</h2>
    <div class="mural-toolbar">
     <nav class="mural-tabs" role="tablist" aria-label="${state.lang==='zh'?'选择壁画':'Choose mural'}">${muralCatalog.walls.map(item=>`<button type="button" role="tab" data-mural="${item.id}" aria-selected="${item.id===wall.id}">${escapeHTML(item.label[state.lang])}</button>`).join('')}</nav>

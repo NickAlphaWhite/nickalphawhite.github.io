@@ -51,7 +51,7 @@ async function viewerReady(page){await page.waitForFunction(()=>appTest.getDetai
   assert.equal(await page.locator('#deepzoom-stage img').count(),0,'No separate fixed preview image');
   if(process.env.KAIHUA_SCREENSHOTS)await page.screenshot({path:path.join(process.env.KAIHUA_SCREENSHOTS,`kaihua-${id}-with-intro.png`)});
   const fit=await page.evaluate(()=>{const v=appTest.getDetail().getViewer(),b=v.viewport.getBounds(),i=v.world.getItemAt(0).getBounds();return b.x<=i.x+.001&&b.y<=i.y+.001&&b.x+b.width>=i.x+i.width-.001&&b.y+b.height>=i.y+i.height-.001});assert.equal(fit,true,'Whole mural fits without clipping');
-  assert.equal(await page.locator('.mural-hotspot').count(),{left:4,back:3,right:7}[id],'Only reviewed story locations are displayed');
+  assert.equal(await page.locator('.mural-hotspot').count(),{left:4,back:6,right:7}[id],'Only reviewed story locations are displayed');
   if(id==='right'){
     await page.locator('[data-hotspot="shanyou-weaving"]').click();await page.waitForFunction(()=>appTest.getDetail().getViewer().viewport.getZoom()>2);
     await page.waitForFunction(()=>{const stage=document.querySelector('#deepzoom-stage').getBoundingClientRect(),marker=document.querySelector('.mural-hotspot.is-active').getBoundingClientRect(),panel=document.querySelector('.mural-hotspot-note').getBoundingClientRect();return Math.abs(marker.x+marker.width/2-stage.x-stage.width/4)<2&&Math.abs(marker.y+marker.height/2-stage.y-stage.height/2)<2&&Math.abs(panel.x-stage.x-stage.width/2)<2});
