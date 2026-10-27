@@ -1,4 +1,4 @@
-import {mountMuralHotspots} from './mural-hotspots.js?v=split1';
+import {mountMuralHotspots} from './mural-hotspots.js?v=long1';
 let libraryPromise;
 function loadLibrary(){
   if(globalThis.OpenSeadragon)return Promise.resolve(globalThis.OpenSeadragon);
