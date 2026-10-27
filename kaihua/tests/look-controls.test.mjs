@@ -19,6 +19,22 @@ test('normal drag is applied once per frame and a drag does not inspect',()=>{
   f.controls.update(.016);assert.ok(Math.abs(f.state.yaw+.09)<1e-9);
   f.pointer('pointerup',120);f.send(f.element,'click');assert.equal(f.state.inspect,0);f.controls.dispose();
 });
+
+test('an unlocked click only captures; a locked click inspects the crosshair',()=>{
+  const f=fixture();f.send(f.element,'click',{clientX:12,clientY:34,pointerType:'mouse'});
+  assert.equal(f.state.lock,1);assert.equal(f.state.inspect,0);
+  f.doc.pointerLockElement=f.element;f.send(f.doc,'pointerlockchange');
+  f.send(f.element,'click',{clientX:12,clientY:34,pointerType:'mouse'});
+  assert.equal(f.state.inspect,1);assert.equal(f.state.lock,1);
+  f.doc.pointerLockElement=null;f.send(f.doc,'pointerlockchange');
+  f.send(f.element,'click',{clientX:12,clientY:34,pointerType:'mouse'});
+  assert.equal(f.state.inspect,1);assert.equal(f.state.lock,2);f.controls.dispose();
+});
+
+test('touch inspection retains tap coordinates without requesting pointer lock',()=>{
+  const f=fixture();f.send(f.element,'click',{pointerType:'touch',clientX:12,clientY:34});
+  assert.equal(f.state.inspect,1);assert.equal(f.state.lock,0);f.controls.dispose();
+});
 test('blur/focus invalidates old drag coordinates and queued input',()=>{
   const f=fixture();f.pointer('pointerdown');f.pointer('pointermove',120);f.send(f.win,'blur');f.pointer('pointermove',900);f.controls.update(.016);assert.equal(f.state.yaw,0);
   f.send(f.win,'focus');f.pointer('pointermove',910);f.controls.update(.016);assert.equal(f.state.yaw,0);

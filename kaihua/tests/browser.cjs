@@ -36,7 +36,14 @@ async function viewerReady(page){await page.waitForFunction(()=>appTest.getDetai
  assert.equal(await page.evaluate(()=>appTest.allowed(0,0)),false);assert.equal(await page.evaluate(()=>appTest.allowed(-5.2,4.8)),true);
  // Open each wall through the actual click/raycast path, not a direct viewer shortcut.
  for(const [view,id] of [[1,'left'],[2,'back'],[3,'right']]){
-  await page.evaluate(view=>{const t=appTest;t.jumpToView(view);const c=t.renderer.domElement;c.dispatchEvent(new MouseEvent('click',{clientX:innerWidth/2,clientY:innerHeight/2,bubbles:true}))},view);
+  await page.evaluate(view=>appTest.jumpToView(view),view);
+  const beforeResume=await page.evaluate(()=>({position:appTest.camera.position.toArray(),quaternion:appTest.camera.quaternion.toArray()}));
+  await page.mouse.click(720,500);
+  await page.waitForFunction(()=>document.pointerLockElement===appTest.renderer.domElement);
+  assert.equal(await page.locator('#overlay').isVisible(),false,'First click on the mural only resumes walking');
+  assert.deepEqual(await page.evaluate(()=>({position:appTest.camera.position.toArray(),quaternion:appTest.camera.quaternion.toArray()})),beforeResume,'Resuming keeps the original position and view');
+  // Off-centre event coordinates must not replace the crosshair ray when captured.
+  await page.evaluate(()=>appTest.renderer.domElement.dispatchEvent(new MouseEvent('click',{clientX:5,clientY:5,bubbles:true})));
   await viewerReady(page);assert.equal(await page.evaluate(()=>appTest.getWallId()),id);assert.equal(await page.locator('.mural-tabs button').count(),3);
   assert.equal(await page.locator('.mural-info').getAttribute('open'),'');
   assert.ok((await page.locator('.mural-info summary').textContent()).length>4);
