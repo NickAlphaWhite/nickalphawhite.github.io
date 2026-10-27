@@ -12,11 +12,10 @@ function registerTileCache(){
   if('serviceWorker' in navigator)navigator.serviceWorker.register(new URL('../sw-murals.js',import.meta.url),{scope:new URL('../',import.meta.url).pathname}).catch(()=>{});
 }
 export function createMuralViewer({host,wall,lang='en',zoomIn,zoomOut,fit,status}){
-  let viewer,destroyed=false,previewCleanup,removeHotspots=()=>{};const listeners=[],preview=document.createElement('img');
-  preview.className='deepzoom-preview';preview.alt=wall.label[lang]||wall.label.en;preview.src=wall.fullPreviewUrl;preview.draggable=false;host.append(preview);
+  let viewer,destroyed=false,removeHotspots=()=>{};const listeners=[];
   const canvas=document.createElement('div');canvas.className='deepzoom-canvas';host.append(canvas);
   const say=(en,zh)=>{if(status)status.textContent=lang==='zh'?zh:en};
-  say('Loading high-resolution tiles…','正在载入高清图块…');registerTileCache();
+  say('Loading mural…','正在载入壁画…');registerTileCache();
   function bind(element,type,handler){element?.addEventListener(type,handler);listeners.push(()=>element?.removeEventListener(type,handler))}
   bind(zoomIn,'click',()=>{viewer?.viewport.zoomBy(1.4);viewer?.viewport.applyConstraints()});
   bind(zoomOut,'click',()=>{viewer?.viewport.zoomBy(1/1.4);viewer?.viewport.applyConstraints()});
@@ -24,7 +23,8 @@ export function createMuralViewer({host,wall,lang='en',zoomIn,zoomOut,fit,status
   const ready=loadLibrary().then(OSD=>{
     if(destroyed)return null;
     viewer=OSD({element:canvas,tileSources:wall.dziUrl,crossOriginPolicy:'Anonymous',showNavigationControl:false,showNavigator:false,
-      drawer:'canvas',animationTime:.22,blendTime:.12,immediateRender:false,
+      drawer:'canvas',animationTime:.22,blendTime:0,immediateRender:false,
+      subPixelRoundingForTransparency:OSD.SUBPIXEL_ROUNDING_OCCURRENCES.ALWAYS,
       maxImageCacheCount:256,imageLoaderLimit:6,maxTilesPerFrame:4,
       maxZoomPixelRatio:1.1,minZoomImageRatio:1,homeFillsViewer:false,visibilityRatio:1,constrainDuringPan:true,
       minPixelRatio:.5,preload:false,timeout:20000,tileRetryMax:2,tileRetryDelay:600,
@@ -33,23 +33,24 @@ export function createMuralViewer({host,wall,lang='en',zoomIn,zoomOut,fit,status
     viewer.addHandler('open',()=>{
       if(destroyed)return;
       const image=viewer.world.getItemAt(0);
-      // The first tiled view uses the half-resolution source level (matching level 3),
-      // instead of replacing that preview with a lower-resolution overview pyramid.
-      image.source.minLevel=Math.max(image.source.minLevel,image.source.maxLevel-1);
+      // WebP alpha is not inferred by OSD's default PNG-only transparency check.
+      // Clear transparent tiles correctly instead of leaving lower levels underneath.
+      image.source.hasTransparency=()=>true;
+      // One image, one viewport: let the pyramid load only the visible resolution.
+      // No independent, fixed <img> can remain on top while zooming or panning.
       viewer.viewport.goHome(true);removeHotspots=mountMuralHotspots(viewer,wall,OSD);
       function reveal(){if(!destroyed&&image.getFullyLoaded()){
-        preview.classList.add('is-ready');say('Wheel to zoom · drag to pan','滚轮缩放 · 拖动平移');
-        if(!previewCleanup)previewCleanup=setTimeout(()=>{preview.removeAttribute('src');preview.remove()},180);
+        say('Wheel to zoom · drag to pan','滚轮缩放 · 拖动平移');
       }}
       image.addHandler('fully-loaded-change',reveal);reveal();
     });
-    viewer.addHandler('open-failed',()=>say('High-resolution tiles unavailable. The full preview remains visible.','高清图块暂不可用，仍可查看完整预览。'));
+    viewer.addHandler('open-failed',()=>say('Unable to load this mural. Please reopen it to retry.','壁画暂时无法载入，请重新打开重试。'));
     viewer.addHandler('tile-load-failed',()=>say('Retrying a high-resolution tile…','正在重试高清图块…'));
     bind(host,'keydown',event=>{if(event.key==='0'||event.key==='Home'){event.preventDefault();viewer.viewport.goHome()}});
     return viewer;
-  }).catch(error=>{if(!destroyed)say('Viewer unavailable. The full preview remains visible.','查看器暂不可用，仍可查看完整预览。');console.warn(error);return null});
+  }).catch(error=>{if(!destroyed)say('Viewer unavailable. Please reopen it to retry.','查看器暂不可用，请重新打开重试。');console.warn(error);return null});
   return {
     ready,getViewer:()=>viewer,
-    destroy(){destroyed=true;clearTimeout(previewCleanup);listeners.forEach(remove=>remove());removeHotspots();viewer?.destroy();preview.removeAttribute('src');preview.remove();canvas.remove();viewer=null}
+    destroy(){destroyed=true;listeners.forEach(remove=>remove());removeHotspots();viewer?.destroy();canvas.remove();viewer=null}
   };
 }
