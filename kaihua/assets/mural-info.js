@@ -1,4 +1,4 @@
-import {muralNotes} from '../data/mural-notes.js?v=walls2';
+import {muralNotes} from '../data/mural-notes.js?v=northwest1';
 export function createMuralInfo(wall,lang='en'){
   const note=muralNotes[wall.id]?.[lang]||muralNotes[wall.id]?.en;
   const details=document.createElement('details');details.className='mural-info';details.open=true;

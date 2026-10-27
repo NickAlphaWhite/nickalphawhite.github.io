@@ -1,4 +1,4 @@
-import {muralStories} from '../data/mural-stories.js?v=walls2';
+import {muralStories} from '../data/mural-stories.js?v=northwest1';
 let catalogPromise;
 export function loadMuralCatalog(){
   if(!catalogPromise)catalogPromise=fetch(new URL('../data/murals.json',import.meta.url)).then(async response=>{
