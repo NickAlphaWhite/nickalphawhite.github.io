@@ -1,6 +1,342 @@
-// Coordinates refer to the complete user-provided image, including its upper band.
-// Published west-wall episodes match right_wall. Longer narratives paraphrase the ancient sutra; they do not assert that every event appears in this crop.
+// Normalized coordinates refer to complete user-provided scans, not scene crops.
+// Topics follow cited research interpretations; narrative paragraphs retell ancient sutras.
 export const muralStories={
+  "left": [
+    {
+      "id": "huayan-tusita-assembly",
+      "order": 1,
+      "x": 0.14,
+      "y": 0.61,
+      "region": {
+        "x": 0.02,
+        "y": 0.31,
+        "width": 0.23,
+        "height": 0.64
+      },
+      "title": {
+        "zh": "兜率天宫迎佛说法",
+        "en": "Welcoming the Buddha in Tusita"
+      },
+      "text": {
+        "zh": "这一铺可与研究中的兜率天宫会解读对照。《华严经·升兜率天宫品》讲述，如来以神力来到兜率天的庄严宫殿。天王遥见佛来，准备宝座、华盖、香花和种种供具，与大众共同迎接说法。经文借一场盛大的迎会，把众人的恭敬与求法之心写成可以观看的场景。\n\n在经文的世界里，如来并未因此离开菩提树下，教化能够同时显现在不同地方。宫殿、宝座与光明共同表现这种广大境界。读这段故事时，可以把注意力放在“众人如何聚集、如何迎接”上，理解庄严空间与说法活动之间的关系，而不必把它想成现实中的一条旅行路线。\n\n画面上方的殿阁、成束的光线和下方的人群相互呼应。先沿着光线寻找主尊，再观察两侧人物怎样朝中间靠拢，最后看下方的供具与进入法会的队伍。这一铺的褪色较重，仍能用建筑、光线和人物的总体布局，读出迎请与听法的主题。",
+        "en": "This panel is read in Gu Dongfang’s study as the Tusita assembly. In the Avatamsaka Sutra, the king of Tusita prepares a jeweled seat, canopies, incense and flowers to welcome the Buddha and the gathering.\n\nThe sutra describes the Buddha appearing there without departing from the bodhi tree. The palace and radiance express a teaching present across different places. Read the episode through the participants’ welcome and wish to hear, rather than as a geographical itinerary.\n\nFollow the building and streams of light toward the central figure, then examine the groups and offerings below. Despite substantial fading, their arrangement preserves the relationship between welcome, gathering and teaching."
+      },
+      "lookFor": {
+        "zh": "看上方殿阁与向外展开的光束，再顺着两侧听法众的朝向回到中央。此处以整铺构图作定位，未为残损人物逐一命名。",
+        "en": "Trace the building and radiating lines, then follow the listeners toward the center. The marker identifies the composition rather than naming damaged individual figures."
+      },
+      "source": {
+        "label": {
+          "zh": "谷东方 · 华严经变研究（2015，转载全文）",
+          "en": "Gu Dongfang · Huayan study (2015, reproduced text)"
+        },
+        "url": "https://www.sohu.com/a/525367133_121188364",
+        "caption": "图4：第一铺说法图"
+      },
+      "textSource": {
+        "label": {
+          "zh": "经文依据：《华严经》卷二十二·升兜率天宫品",
+          "en": "Narrative: Avatamsaka Sutra, fascicle 22"
+        },
+        "url": "https://deerpark.app/cbeta/T0279/22"
+      },
+      "verification": {
+        "method": "published-tracing-and-visual-review",
+        "referenceSize": [
+          6492,
+          2251
+        ],
+        "figure": "Gu 2015, figure 4"
+      }
+    },
+    {
+      "id": "huayan-bodhi-assembly",
+      "order": 2,
+      "x": 0.38,
+      "y": 0.59,
+      "region": {
+        "x": 0.265,
+        "y": 0.32,
+        "width": 0.225,
+        "height": 0.62
+      },
+      "title": {
+        "zh": "菩提场：成道后的众会",
+        "en": "The gathering at the place of awakening"
+      },
+      "text": {
+        "zh": "《华严经》开篇把读者带到摩竭提国的菩提场：佛初成正觉，菩萨与各种神众从不同方面聚集。经文以宝树、莲花、光明和庄严的座位，描绘一个广大的说法世界。研究将这一铺与菩提场的初会联系起来，使画面中央的佛、周围的人物与树木有了共同的阅读背景。\n\n参加法会的不只是衣冠相似的一组人。经文列举守护山、林、水、风等世界要素的众神，也写到许多菩萨前来听法。这样的叙事把世间各处汇集到同一场众会之中，强调不同的存在都能够进入教化的范围。理解这一背景后，繁密的人物便有了相互联系。\n\n可以先看主尊的圆光与莲座，再向两侧比较人物的衣冠、姿势和手中物品，最后观察下方的排列。画面以中心与周围、上层与下层组织众会；这些位置关系，比仅凭面貌猜测某个人物的名字更可靠，也能帮助我们看出法会的层次。",
+        "en": "The Avatamsaka Sutra opens at the place of awakening in Magadha. Newly awakened, the Buddha is surrounded by bodhisattvas and many kinds of beings. Trees, lotuses and radiance describe an expansive teaching world. Research associates this panel with that opening assembly.\n\nThe scripture includes guardians connected with mountains, forests, water and wind, as well as bodhisattvas. Its gathering brings different aspects of the world into a shared occasion for teaching.\n\nBegin with the central halo and lotus seat. Compare clothing, gestures and objects on either side, then the groups below. Their arrangement offers a firmer way to read the assembly than assigning names to poorly preserved faces."
+      },
+      "lookFor": {
+        "zh": "从中央圆光、莲座向外看，比较两侧人物与下方群像。此点讲述法会整体，不把每件残损持物直接当作确定身份的证据。",
+        "en": "Read outward from the halo and lotus seat to the surrounding groups. Worn objects alone cannot securely identify every participant."
+      },
+      "source": {
+        "label": {
+          "zh": "谷东方 · 华严经变研究（2015，转载全文）",
+          "en": "Gu Dongfang · Huayan study (2015, reproduced text)"
+        },
+        "url": "https://www.sohu.com/a/525367133_121188364",
+        "caption": "图5：第二铺说法图"
+      },
+      "textSource": {
+        "label": {
+          "zh": "经文依据：《华严经》卷一·世主妙严品",
+          "en": "Narrative: Avatamsaka Sutra, fascicle 1"
+        },
+        "url": "https://deerpark.app/cbeta/T0279/1"
+      },
+      "verification": {
+        "method": "published-tracing-and-visual-review",
+        "referenceSize": [
+          6492,
+          2251
+        ],
+        "figure": "Gu 2015, figure 5"
+      }
+    },
+    {
+      "id": "huayan-jetavana-assembly",
+      "order": 3,
+      "x": 0.62,
+      "y": 0.59,
+      "region": {
+        "x": 0.505,
+        "y": 0.32,
+        "width": 0.235,
+        "height": 0.62
+      },
+      "title": {
+        "zh": "逝多林：展开法界的说法",
+        "en": "Jetavana: a teaching world unfolds"
+      },
+      "text": {
+        "zh": "《华严经·入法界品》以逝多林给孤独园的一场法会展开叙事。佛与菩萨大众同在庄严的楼阁之中，经文又使眼前的楼阁与园林显出无边境界。研究将这一铺的建筑说法场景与逝多林法会联系起来，为理解层叠的殿宇、赴会者与光明提供了一种读法。\n\n经文写佛进入三昧，广大庄严的世界由此向大众展开。不同地方的菩萨前来赴会，听法与修行也获得超越眼前院落的尺度。这里的楼阁既让人想到熟悉的建筑，又承载了经文中广大的教化空间；它把不容易用语言想象的境界，变成了可以循着阶台、柱列和人物朝向去看的画面。\n\n先看中央殿堂与坐像，再看殿前两侧的众人及下方供桌。把建筑的前后层次与人物的聚集关系一起阅读，可以体会这场法会如何向外展开。这是依据经文与研究作的主题讲解，画面里的残损小像仍保留其辨识上的余地。",
+        "en": "The Entry into the Dharma Realm chapter places a gathering in Jetavana’s adorned pavilion. The scripture lets that pavilion and grove reveal a boundless setting. Gu’s study connects this architectural assembly with Jetavana.\n\nAs the Buddha enters meditative absorption, a vast world becomes manifest and bodhisattvas gather from other places. The familiar shape of a pavilion becomes a way to approach the scripture’s expansive teaching space.\n\nFollow the central building and seated figure, the groups in front, and the offering table below. Read architectural depth together with the participants’ orientations. The interpretation concerns the whole composition; damaged small figures remain uncertain."
+      },
+      "lookFor": {
+        "zh": "看中央殿堂、阶台、两侧听法众和下方供桌之间的前后关系。不要把叠置空间误当成彼此无关的几张小画。",
+        "en": "Connect the pavilion, platforms, listeners and lower offering table as a shared setting."
+      },
+      "source": {
+        "label": {
+          "zh": "谷东方 · 华严经变研究（2015，转载全文）",
+          "en": "Gu Dongfang · Huayan study (2015, reproduced text)"
+        },
+        "url": "https://www.sohu.com/a/525367133_121188364",
+        "caption": "图6：第三铺说法图"
+      },
+      "textSource": {
+        "label": {
+          "zh": "经文依据：《华严经》卷六十·入法界品",
+          "en": "Narrative: Avatamsaka Sutra, fascicle 60"
+        },
+        "url": "https://deerpark.app/cbeta/T0279/60"
+      },
+      "verification": {
+        "method": "published-tracing-and-visual-review",
+        "referenceSize": [
+          6492,
+          2251
+        ],
+        "figure": "Gu 2015, figure 6"
+      }
+    },
+    {
+      "id": "huayan-sudhana-journey",
+      "order": 4,
+      "x": 0.875,
+      "y": 0.66,
+      "region": {
+        "x": 0.79,
+        "y": 0.48,
+        "width": 0.17,
+        "height": 0.38
+      },
+      "title": {
+        "zh": "善财童子：不断求教的旅程",
+        "en": "Sudhana’s journey of learning"
+      },
+      "text": {
+        "zh": "在《华严经·入法界品》中，善财童子听闻文殊说法后，发起求道之心，并继续寻访善知识。他不断向他人请教如何修菩萨行；每一次相遇，都让这段求学旅程向前展开。后世常以“五十三参”概括这一系列参访，强调学习需要持续的发问、实践与谦逊。\n\n这铺大佛的袈裟中包含许多小场景。研究把其中反复出现的童子参拜图像，与善财求法联系起来。观看时，可以先看到整体的法界佛，再回到衣纹范围内的小人物和建筑，体会大与小、整体与局部如何同时存在。佛身中的场景因此成为进入故事的另一条路径。\n\n本点介绍整组参学主题，而不为每一幅模糊小图强定一次参访的名称。可以找一处童子面向另一人物的姿势，再找附近的建筑或山石作分界，比较不同场景中的相遇关系。这样读图，既能接近善财不断求教的故事，也能保留残损图像应有的不确定性。",
+        "en": "In the Entry into the Dharma Realm chapter, Sudhana hears Manjushri’s teaching and begins seeking spiritual friends. He repeatedly asks how to practice the bodhisattva path. The sequence is commonly known as the fifty-three visits.\n\nThis large Buddha’s robe contains many small scenes. Research relates recurring images of a young visitor to Sudhana’s journey. Move between the overall Buddha and the small figures and buildings within the robe.\n\nThe marker explains the series rather than naming every damaged encounter. Look for a youth facing another person and compare the settings that separate the scenes. This preserves both the narrative of learning and the uncertainties of the image."
+      },
+      "lookFor": {
+        "zh": "从大佛腹部与袈裟上的小场景入手，寻找合掌童子和被参访者的相对姿势。这里不是善友太子的故事，两位童子的名称与经文来源不同。",
+        "en": "Find small encounters within the robe. Sudhana is distinct from Prince Shanyou in the other wall image."
+      },
+      "source": {
+        "label": {
+          "zh": "谷东方 · 华严经变研究（2015，转载全文）",
+          "en": "Gu Dongfang · Huayan study (2015, reproduced text)"
+        },
+        "url": "https://www.sohu.com/a/525367133_121188364",
+        "caption": "图7：第四铺法界佛像及参学图像"
+      },
+      "textSource": {
+        "label": {
+          "zh": "经文依据：《华严经》卷六十二·入法界品",
+          "en": "Narrative: Avatamsaka Sutra, fascicle 62"
+        },
+        "url": "https://deerpark.app/cbeta/T0279/62"
+      },
+      "verification": {
+        "method": "published-tracing-and-visual-review",
+        "referenceSize": [
+          6492,
+          2251
+        ],
+        "figure": "Gu 2015, figure 7"
+      }
+    }
+  ],
+  "back": [
+    {
+      "id": "tusita-palace",
+      "order": 1,
+      "x": 0.854506,
+      "y": 0.823036,
+      "region": {
+        "x": 0.790481,
+        "y": 0.704975,
+        "width": 0.128066,
+        "height": 0.236058
+      },
+      "title": {
+        "zh": "天子发愿：宝宫如何出现",
+        "en": "The vow that brings forth the palace"
+      },
+      "text": {
+        "zh": "《观弥勒菩萨上生兜率天经》由优波离的发问展开：弥勒命终之后，将往生何处？佛的回答把听众带到兜率天，描写诸天子为迎接弥勒而共同发愿。他们献出宝冠与珍宝，以愿心化现宫殿、城垣与宝树，让供养成为一场创造庄严世界的故事。\n\n经文中的宝宫有重重围墙和光明，也有龙王守护、宝树环绕。壁画将这种广大的想象落实到可以看见的城门和楼阁之中。下方建筑因而不仅提供一个入口，也让观者由外向内逐步接近天宫；画中的空间次序与经文对净土的描写互相呼应。\n\n此点位于后壁右侧天宫画面的下部。先看城楼正面的门道、台基与两侧人物，再把目光向上移到院落。这样的阅读顺序能把分层的建筑连成一个整体。宝宫的化现属于经文的宗教叙事，画中的具体房屋形象则帮助人们把这段叙事看得更近。",
+        "en": "The Maitreya ascent sutra begins with Upali asking where Maitreya will be reborn. The Buddha describes Tusita, where heavenly beings make vows and offer their crowns and jewels to bring forth a palace for him.\n\nWalls, radiance, trees and protecting dragons belong to the scripture’s imagined setting. The painting gives that setting an approachable entrance through a gate tower and layered buildings.\n\nRead the lower gate and platforms first, then follow the composition upward into the courtyard. The marker links the palace’s scriptural origin with its visible architectural setting."
+      },
+      "lookFor": {
+        "zh": "定位在下部城门楼。比较门道、台基与周围人物，再向上连接院落；中间大片空白仍是原图的后门间隔。",
+        "en": "Start at the lower gate tower and follow the composition upward. The large gap between the two paintings is the doorway."
+      },
+      "source": {
+        "label": {
+          "zh": "杨怡菲等 · 兜率天宫图像研究（2022）",
+          "en": "Yang et al. · Tusita palace study (2022)"
+        },
+        "url": "https://www.thepaper.cn/newsDetail_forward_19683118",
+        "caption": "图2a：后壁右侧宫殿正射图像"
+      },
+      "textSource": {
+        "label": {
+          "zh": "经文依据：《观弥勒菩萨上生兜率天经》",
+          "en": "Narrative: Sutra on Maitreya’s Ascent to Tusita"
+        },
+        "url": "https://deerpark.app/cbeta/T0452"
+      },
+      "verification": {
+        "method": "feature-match-and-visual-review",
+        "inliers": 567,
+        "referenceSize": [
+          6568,
+          2317
+        ],
+        "figure": "Yang et al. 2022, figure 2a"
+      }
+    },
+    {
+      "id": "tusita-lotus",
+      "order": 2,
+      "x": 0.853516,
+      "y": 0.552191,
+      "region": {
+        "x": 0.788031,
+        "y": 0.477251,
+        "width": 0.130992,
+        "height": 0.149843
+      },
+      "title": {
+        "zh": "莲池与天乐：净土中的供养",
+        "en": "Lotus pools and heavenly offerings"
+      },
+      "text": {
+        "zh": "弥勒上生经以宝树、流水、莲花和音乐描写兜率天宫。经文让树叶与宝珠发出声音，又让水中生出莲花、花上出现天女。可见的形象与不可见的声音交织起来，共同表现一个适于闻法、令人向往的世界。这里的欢乐始终与供养、修善和听闻佛法相连。\n\n这段叙事来到壁画中，便成为院落、水池和人物共同构成的场景。观者可以在楼阁之间寻找水面、莲花与两侧人群，再比较她们站立、转身或活动的姿势。画面保存状况各有不同，仍能看出建筑围合与人物活动之间的联系。\n\n读这一局部时，不必急于数清每一位天女，也不应根据一件模糊持物确定她的身份。可以从池边与栏杆的位置开始，把人物看作共同参与供养的群体，再回到上方的说法中心。水、花与乐舞使天宫成为一个能够被想象、被观看的生活场景。",
+        "en": "The ascent sutra describes Tusita through trees, water, lotuses and music. Jewels and leaves produce sounds, while flowers and heavenly women appear in the water. These forms express an inviting setting for hearing the teaching.\n\nIn the painting, buildings, a pool and groups of figures make that setting visible. Look between the pavilions for water, flowers and varied gestures rather than treating the courtyard as empty decoration.\n\nDamaged details do not securely identify every person or object. Begin with the pool and railings, consider the participating groups, then return to the teaching hall above."
+      },
+      "lookFor": {
+        "zh": "看院中水池、栏杆和两侧人物，注意楼阁之间如何留出活动空间。题材来自上生经，不把模糊持物写成确定乐器名称。",
+        "en": "Find the pool, railings and figures between the pavilions. Unclear objects are not assigned definite instrument names."
+      },
+      "source": {
+        "label": {
+          "zh": "杨怡菲等 · 兜率天宫图像研究（2022）",
+          "en": "Yang et al. · Tusita palace study (2022)"
+        },
+        "url": "https://www.thepaper.cn/newsDetail_forward_19683118",
+        "caption": "图2a：后壁右侧宫殿正射图像"
+      },
+      "textSource": {
+        "label": {
+          "zh": "经文依据：《观弥勒菩萨上生兜率天经》",
+          "en": "Narrative: Sutra on Maitreya’s Ascent to Tusita"
+        },
+        "url": "https://deerpark.app/cbeta/T0452"
+      },
+      "verification": {
+        "method": "feature-match-and-visual-review",
+        "inliers": 567,
+        "referenceSize": [
+          6568,
+          2317
+        ],
+        "figure": "Yang et al. 2022, figure 2a"
+      }
+    },
+    {
+      "id": "maitreya-teaching",
+      "order": 3,
+      "x": 0.852237,
+      "y": 0.422453,
+      "region": {
+        "x": 0.826242,
+        "y": 0.360143,
+        "width": 0.051992,
+        "height": 0.124606
+      },
+      "title": {
+        "zh": "弥勒上生：善法堂中的说法",
+        "en": "Maitreya teaches in Tusita"
+      },
+      "text": {
+        "zh": "在上生经的叙事中，弥勒将往生兜率天，为补处菩萨，并在未来下生人间成佛。佛向优波离说明这一去处，也为后来的听众描写与弥勒相遇的愿景。上生所指的是往生兜率天，阅读这一画面时，可以先把它与未来下生成佛的故事分开理解。\n\n经文用许多篇幅讲述宫殿如何化现、如何庄严，最后使弥勒的说法有了可以想象的所在。壁画上方的殿堂与中央坐像，正提供了这一叙事的观看中心。相较于遍布整幅的楼阁，主尊的形象并不巨大，却通过居中的位置与周围的朝向聚集注意。\n\n经文还把这种愿景与持戒、修善、香花供养及读诵经典等实践联系起来。可以先看殿内中央坐像，再看门窗、柱列与两旁人物，最后向下回顾院落与城楼。这样从中心向外读图，能理解天宫的庄严如何服务于说法的主题，而不是只把它看作华丽的建筑陈列。",
+        "en": "In the ascent sutra, Maitreya is reborn in Tusita before his future descent and buddhahood. The Buddha explains this setting to Upali and describes the hope of encountering Maitreya there.\n\nThe palace’s creation and adornment provide a setting for teaching. The upper hall and its central seated figure form the focus of this painting, even though the architecture occupies much of the image.\n\nThe sutra connects that hope with ethical conduct, offerings and recitation. Begin at the seated figure, then read outward through the hall, courtyard and gate to understand how the buildings support the teaching theme."
+      },
+      "lookFor": {
+        "zh": "编号位于上方善法堂的中央坐像附近。从主尊向两侧殿柱与人物看，再向下连接池院和城楼。",
+        "en": "Begin near the seated figure in the upper hall, then move outward and downward through the palace."
+      },
+      "source": {
+        "label": {
+          "zh": "杨怡菲等 · 兜率天宫图像研究（2022）",
+          "en": "Yang et al. · Tusita palace study (2022)"
+        },
+        "url": "https://www.thepaper.cn/newsDetail_forward_19683118",
+        "caption": "图2a：后壁右侧宫殿正射图像"
+      },
+      "textSource": {
+        "label": {
+          "zh": "经文依据：《观弥勒菩萨上生兜率天经》",
+          "en": "Narrative: Sutra on Maitreya’s Ascent to Tusita"
+        },
+        "url": "https://deerpark.app/cbeta/T0452"
+      },
+      "verification": {
+        "method": "feature-match-and-visual-review",
+        "inliers": 567,
+        "referenceSize": [
+          6568,
+          2317
+        ],
+        "figure": "Yang et al. 2022, figure 2a"
+      }
+    }
+  ],
   "right": [
     {
       "id": "shanyou-farming",
