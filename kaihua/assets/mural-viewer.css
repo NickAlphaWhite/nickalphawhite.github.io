@@ -11,9 +11,12 @@
 .mural-tabs button[aria-selected=true]{color:#fff;border-bottom:1px solid #c9b58e}
 .mural-view-controls{display:flex;align-items:center;gap:4px}
 .mural-stage{position:relative;flex:1;min-height:0;overflow:hidden;outline:none;background:#171918}
-.deepzoom-preview{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:1;opacity:1;transition:opacity .15s}
-.deepzoom-preview.is-ready{opacity:0}
 .deepzoom-canvas{position:absolute;inset:0;touch-action:none}
+#mural-info-host{flex:none;min-height:0}
+.mural-info{flex:none;padding:10px 24px 12px;border-top:1px solid #343934;font:12px/1.7 sans-serif;color:#bdc2b8;max-height:180px;overflow:auto}
+.mural-info summary{cursor:pointer;color:#e1e1d8;font-size:13px;line-height:1.8}
+.mural-info p{margin:7px 0 0;max-width:1000px}
+.mural-info a{color:#c9b58e;text-decoration:underline;text-underline-offset:3px;margin-right:14px;font-size:11px}
 .mural-status{height:28px;min-height:28px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#a5afa0;margin:0;background:#171918}
 .mural-hotspot{width:24px;height:24px;border-radius:50%;border:1px solid #ded7c6;background:#26352bdd;color:#fff;font-size:15px;cursor:pointer}
 .mural-hotspot-note{position:absolute;left:20px;bottom:20px;max-width:min(340px,80%);padding:18px;background:#242b25;color:#e8e9de;border:1px solid #596557;z-index:6;font:13px/1.7 sans-serif}

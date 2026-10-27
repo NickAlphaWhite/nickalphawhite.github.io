@@ -38,6 +38,11 @@ async function viewerReady(page){await page.waitForFunction(()=>appTest.getDetai
  for(const [view,id] of [[1,'left'],[2,'back'],[3,'right']]){
   await page.evaluate(view=>{const t=appTest;t.jumpToView(view);const c=t.renderer.domElement;c.dispatchEvent(new MouseEvent('click',{clientX:innerWidth/2,clientY:innerHeight/2,bubbles:true}))},view);
   await viewerReady(page);assert.equal(await page.evaluate(()=>appTest.getWallId()),id);assert.equal(await page.locator('.mural-tabs button').count(),3);
+  assert.equal(await page.locator('.mural-info').getAttribute('open'),'');
+  assert.ok((await page.locator('.mural-info summary').textContent()).length>4);
+  assert.ok(await page.locator('.mural-info a').count()>0,'Wall introduction includes verifiable sources');
+  assert.equal(await page.locator('#deepzoom-stage img').count(),0,'No separate fixed preview image');
+  if(process.env.KAIHUA_SCREENSHOTS)await page.screenshot({path:path.join(process.env.KAIHUA_SCREENSHOTS,`kaihua-${id}-with-intro.png`)});
   const fit=await page.evaluate(()=>{const v=appTest.getDetail().getViewer(),b=v.viewport.getBounds(),i=v.world.getItemAt(0).getBounds();return b.x<=i.x+.001&&b.y<=i.y+.001&&b.x+b.width>=i.x+i.width-.001&&b.y+b.height>=i.y+i.height-.001});assert.equal(fit,true,'Whole mural fits without clipping');
   assert.equal(await page.locator('.mural-hotspot').count(),0,'No invented research hotspots');
   const before=await page.evaluate(()=>{window.oldDetail=appTest.getDetail();return {position:appTest.camera.position.toArray(),rotation:appTest.camera.quaternion.toArray(),fov:appTest.camera.fov}});
@@ -53,10 +58,10 @@ async function viewerReady(page){await page.waitForFunction(()=>appTest.getDetai
   const target=new THREE.Vector3((u-.5)*m.geometry.parameters.width,(v-.5)*m.geometry.parameters.height,0).applyMatrix4(m.matrixWorld);
   const normal=new THREE.Vector3(0,0,1).applyQuaternion(m.quaternion);t.camera.position.copy(target.clone().add(normal));t.camera.lookAt(target);t.syncOrientationFromCamera();return !t.inspectWall();
  });assert.equal(margin,true,'Transparent source margin does not open the archive');
- // Initial source level 3; wheel zoom fetches higher-detail level 2 tiles.
+ // Native pyramid chooses screen-sized initial detail; wheel loads source level 2.
  await page.evaluate(()=>{appTest.jumpToView(1);appTest.setDrawer('atlas',0)});await viewerReady(page);
  const tileLevels=()=>requests.filter(url=>url.includes('zoom_files/')).map(url=>Number(url.split('zoom_files/')[1].split('/')[0]));
- const initialMax=Math.max(...tileLevels());assert.equal(initialMax,13,'Initial tile detail matches source level 3');
+ const initialMax=Math.max(...tileLevels());assert.ok(initialMax<=13&&initialMax>=11,'Initial tiles match viewport, not forced half-resolution whole-wall downloads');
  const stage=page.locator('#deepzoom-stage'),box=await stage.boundingBox();await page.mouse.move(box.x+box.width*.45,box.y+box.height*.55);
  // OSD normalizes each wheel event to a zoom step, regardless of its raw delta.
  for(let n=0;n<14;n++){await page.mouse.wheel(0,-120);await page.waitForTimeout(120)}
@@ -81,12 +86,32 @@ async function viewerReady(page){await page.waitForFunction(()=>appTest.getDetai
  const hotspot=page.locator('[data-hotspot="qa-only"]');await hotspot.waitFor();
  const alignment=await page.evaluate(()=>{const v=appTest.getDetail().getViewer(),p=v.world.getItemAt(0).imageToViewportCoordinates(appTest.getCatalog().walls[0].width*.5,appTest.getCatalog().walls[0].height*.5),at=v.viewport.pixelFromPoint(p,true),button=document.querySelector('[data-hotspot="qa-only"]').getBoundingClientRect(),canvas=v.container.getBoundingClientRect();return Math.hypot(button.x+button.width/2-canvas.x-at.x,button.y+button.height/2-canvas.y-at.y)});assert.ok(alignment<2,'Hotspot is registered to image coordinates');
  await hotspot.click();assert.equal(await page.locator('.mural-hotspot-note').isVisible(),true);await page.evaluate(()=>{appTest.getCatalog().walls[0].hotspots=[];appTest.clearDrawer()});
+ // Reproduce the reported race: zoom/drag a transparent back wall while tiles are slow.
+ const slowContext=await browser.newContext({viewport:{width:1440,height:1000},serviceWorkers:'block'}),slow=await slowContext.newPage();
+ slow.on('pageerror',error=>errors.push(error.message));
+ await slow.route(base,route=>route.fulfill({contentType:'text/html',body:injected}));
+ await slow.route('**/zoom_files/**',async route=>{await new Promise(resolve=>setTimeout(resolve,800));await route.continue()});
+ await slow.goto(base);await loadReady(slow);await slow.evaluate(()=>{appTest.setMode('explore');appTest.setDrawer('atlas',2)});
+ await slow.waitForFunction(()=>appTest.getDetail()?.getViewer()?.world.getItemCount()===1);
+ const single=await slow.evaluate(()=>({images:document.querySelectorAll('#deepzoom-stage img').length,world:appTest.getDetail().getViewer().world.getItemCount(),alpha:appTest.getDetail().getViewer().world.getItemAt(0).source.hasTransparency()}));
+ assert.deepEqual(single,{images:0,world:1,alpha:true});
+ await slow.locator('#mural-zoom-in').click({clickCount:3,delay:100});
+ const slowBox=await slow.locator('#deepzoom-stage').boundingBox();await slow.mouse.move(slowBox.x+slowBox.width*.5,slowBox.y+slowBox.height*.5);await slow.mouse.down();await slow.mouse.move(slowBox.x+slowBox.width*.5+80,slowBox.y+slowBox.height*.5+35,{steps:6});await slow.mouse.up();
+ await slow.waitForFunction(()=>!appTest.getDetail().getViewer().isAnimating());
+ const pendingZoom=await slow.evaluate(()=>appTest.getDetail().getViewer().viewport.getZoom()),pendingCenter=await slow.evaluate(()=>appTest.getDetail().getViewer().viewport.getCenter().toString());await viewerReady(slow);
+ assert.ok(Math.abs(await slow.evaluate(()=>appTest.getDetail().getViewer().viewport.getZoom())-pendingZoom)<.001,'Tile completion never resets the chosen view');
+ assert.equal(await slow.evaluate(()=>appTest.getDetail().getViewer().viewport.getCenter().toString()),pendingCenter,'Tile completion preserves the panned image position');
+ await slow.locator('.mural-info summary').click();
+ assert.equal(await slow.locator('.mural-info').getAttribute('open'),null);
+ await slow.locator('#mural-fit').click();await slow.waitForFunction(()=>Math.abs(appTest.getDetail().getViewer().viewport.getZoom()-appTest.getDetail().getViewer().viewport.getHomeZoom())<.01);await viewerReady(slow);
+ if(process.env.KAIHUA_SCREENSHOTS)await slow.screenshot({path:path.join(process.env.KAIHUA_SCREENSHOTS,'kaihua-back-no-overlap.png')});
+ await slowContext.close();
  // Keep the previous camera-jump and model regressions covered.
  const rotation=await page.evaluate(()=>{const t=appTest,c=t.renderer.domElement;t.setMode('explore');const y=t.state.yaw;c.dispatchEvent(new PointerEvent('pointerdown',{pointerId:91,pointerType:'mouse',button:0,clientX:100,clientY:200}));window.dispatchEvent(new Event('blur'));c.dispatchEvent(new PointerEvent('pointermove',{pointerId:91,pointerType:'mouse',clientX:900,clientY:200}));t.move(.016);const blur=t.state.yaw-y;window.dispatchEvent(new Event('focus'));t.state.keys.add('ArrowLeft');const before=t.state.yaw;t.move(3);const long=t.state.yaw-before;t.state.keys.clear();return {blur,long}});assert.equal(rotation.blur,0);assert.ok(Math.abs(rotation.long-.062)<1e-8);
  const floor=await page.evaluate(async()=>{const THREE=await import('three'),s=appTest.scene;s.updateMatrixWorld(true);const f=s.getObjectByName('hall-floor'),p=s.getObjectByName('hall-plinth'),hits=new THREE.Raycaster(new THREE.Vector3(-4.2,1,0),new THREE.Vector3(0,-1,0)).intersectObjects([f,p],false);return hits[0].object===f&&hits[0].point.y-hits[1].point.y>.08});assert.equal(floor,true);
  // Standalone archive remains available even if WebGL initialization fails.
  const fallback=await context.newPage();await fallback.route(base,route=>route.fulfill({contentType:'text/html',body:html.replace('const renderer = new THREE.WebGLRenderer',"throw new Error('Simulated WebGL failure');\nconst renderer = new THREE.WebGLRenderer")}));await fallback.goto(base);await fallback.locator('#fallback').waitFor();await fallback.locator('#fallback-atlas').click();await fallback.waitForSelector('.openseadragon-container');assert.equal(await fallback.locator('[data-wall]').count(),3);
- assert.deepEqual(errors,[]);assert.equal(requests.filter(url=>/case\.mgdatatech|_level[0123]\.png/.test(url)).length,0);
+ assert.deepEqual(errors,[]);assert.equal(requests.filter(url=>/case\.mgdatatech|_level[0123]\.png|full-preview\.webp/.test(url)).length,0,'No whole-image preview download behind the viewer');
  console.log(JSON.stringify({passed:true,drawCalls:scene.calls,initialTileLevel:initialMax,zoomedTileLevel:14,persistentCacheEntries:cacheKeys,checks:'3 wall click paths, alpha hit regions, proportions/orientation, no front mural, W direction at 15/30/60/120fps, pose restore, actual high-detail tile requests, pan/fit, bounded cache, normalized hotspots, input/floor regressions, WebGL fallback'},null,2));
  await browser.close();
 })().catch(async error=>{console.error(error);await browser?.close();process.exitCode=1});

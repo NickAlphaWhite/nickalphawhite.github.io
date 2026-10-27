@@ -1,16 +1,17 @@
 <!doctype html>
 <html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>开化寺壁画图录</title><link rel="stylesheet" href="../mural-viewer.css">
+<title>开化寺壁画图录</title><link rel="stylesheet" href="../mural-viewer.css?v=20261027">
 <style>html,body{margin:0;height:100%;background:#171918;color:#e1e1d8;font:13px sans-serif}body{display:flex;flex-direction:column}header{display:flex;gap:20px;align-items:center;padding:12px 20px;border-bottom:1px solid #343934}a{color:inherit}main{flex:1;min-height:0;display:flex;flex-direction:column}.mural-toolbar{padding:6px 12px}button{cursor:pointer;font:inherit}</style>
 <header><a href="../../index.html">← 返回大殿</a><span>开化寺 · 壁画图录</span></header>
-<main><div class="mural-toolbar"><nav class="mural-tabs" id="walls"></nav><div class="mural-view-controls"><button id="out" aria-label="缩小">−</button><button id="fit">全图</button><button id="in" aria-label="放大">+</button></div></div><div class="mural-stage" id="viewer" tabindex="0"></div><p class="mural-status" id="status" role="status"></p></main>
+<main><div class="mural-toolbar"><nav class="mural-tabs" id="walls"></nav><div class="mural-view-controls"><button id="out" aria-label="缩小">−</button><button id="fit">全图</button><button id="in" aria-label="放大">+</button></div></div><div class="mural-stage" id="viewer" tabindex="0"></div><div id="mural-info-host"></div><p class="mural-status" id="status" role="status"></p></main>
 <script type="module">
 import {loadMuralCatalog} from '../mural-data.js';
-import {createMuralViewer} from '../mural-viewer.js';
+import {createMuralViewer} from '../mural-viewer.js?v=20261027';
+import {createMuralInfo} from '../mural-info.js';
 let active;
 try{
  const catalog=await loadMuralCatalog();
- function open(wall){active?.destroy();document.querySelectorAll('[data-wall]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.wall===wall.id)));active=createMuralViewer({host:document.getElementById('viewer'),wall,lang:'zh',zoomIn:document.getElementById('in'),zoomOut:document.getElementById('out'),fit:document.getElementById('fit'),status:document.getElementById('status')})}
+ function open(wall){active?.destroy();document.getElementById('mural-info-host').replaceChildren(createMuralInfo(wall,'zh'));document.querySelectorAll('[data-wall]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.wall===wall.id)));active=createMuralViewer({host:document.getElementById('viewer'),wall,lang:'zh',zoomIn:document.getElementById('in'),zoomOut:document.getElementById('out'),fit:document.getElementById('fit'),status:document.getElementById('status')})}
  for(const wall of catalog.walls){const button=document.createElement('button');button.type='button';button.textContent=wall.label.zh;button.dataset.wall=wall.id;button.onclick=()=>open(wall);document.getElementById('walls').append(button)}
  open(catalog.walls[0]);
 }catch(error){document.getElementById('status').textContent='资源尚未就绪，请先生成本地壁画资源。';console.warn(error)}
