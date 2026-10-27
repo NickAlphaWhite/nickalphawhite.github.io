@@ -5,9 +5,9 @@
 <header><a href="../../index.html">← 返回大殿</a><span>开化寺 · 壁画图录</span></header>
 <main><div class="mural-toolbar"><nav class="mural-tabs" id="walls"></nav><div class="mural-view-controls"><button id="stories" hidden></button><button id="out" aria-label="缩小">−</button><button id="fit">全图</button><button id="in" aria-label="放大">+</button></div></div><div class="mural-stage" id="viewer" tabindex="0"></div><div id="mural-info-host"></div><p class="mural-status" id="status" role="status"></p></main>
 <script type="module">
-import {loadMuralCatalog} from '../mural-data.js?v=long1';
+import {loadMuralCatalog} from '../mural-data.js?v=walls2';
 import {createMuralViewer} from '../mural-viewer.js?v=20261027-long1';
-import {createMuralInfo} from '../mural-info.js?v=stories1';
+import {createMuralInfo} from '../mural-info.js?v=walls2';
 let active;
 try{
  const catalog=await loadMuralCatalog();
