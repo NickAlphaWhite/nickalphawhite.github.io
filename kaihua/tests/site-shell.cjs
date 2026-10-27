@@ -30,7 +30,7 @@ const base=process.env.KAIHUA_TEST_URL||'http://127.0.0.1:8080/kaihua/';
    assert.ok((await page.locator('#overlay').boundingBox()).y>=headerHeight);
    if(id==='#nav-atlas')await page.waitForFunction(()=>shellQA.getDetail()?.getViewer()?.world.getItemAt(0)?.getFullyLoaded(),null,{timeout:60000});
   }
-  assert.deepEqual(await page.locator('.about-timeline time').allTextContents(),['1030','1073','1092–1096']);assert.equal(await page.locator('.about-section').count(),5);assert.ok((await page.locator('.about-page').textContent()).includes('NickAlphaWhite'));assert.ok(!/snake/i.test(await page.locator('.about-page').textContent()));
+  assert.deepEqual(await page.locator('.about-timeline time').allTextContents(),['1030','1073','1092–1096']);assert.equal(await page.locator('.about-section').count(),5);assert.ok((await page.locator('.about-page').textContent()).includes('Yi Zhu'));assert.ok(!/snake/i.test(await page.locator('.about-page').textContent()));
   await page.locator('#nav-atlas').click();assert.deepEqual(await page.locator('.mural-tabs button').allTextContents(),['East wall','North wall','West wall']);
   await page.locator('#nav-home').click();await page.locator('#language').click();await page.evaluate(()=>document.fonts.ready);
   await page.locator('#nav-atlas').click();assert.deepEqual(await page.locator('.mural-tabs button').allTextContents(),['东壁','北壁','西壁']);await page.locator('#nav-method').click();assert.ok((await page.locator('.about-page').textContent()).includes('壁上千年'));assert.ok(!/snake/i.test(await page.locator('.about-page').textContent()));await page.locator('#nav-home').click();
