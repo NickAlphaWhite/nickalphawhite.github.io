@@ -1,4 +1,4 @@
-import {mountMuralHotspots} from './mural-hotspots.js';
+import {mountMuralHotspots} from './mural-hotspots.js?v=stories1';
 let libraryPromise;
 function loadLibrary(){
   if(globalThis.OpenSeadragon)return Promise.resolve(globalThis.OpenSeadragon);
@@ -11,7 +11,7 @@ function loadLibrary(){
 function registerTileCache(){
   if('serviceWorker' in navigator)navigator.serviceWorker.register(new URL('../sw-murals.js',import.meta.url),{scope:new URL('../',import.meta.url).pathname}).catch(()=>{});
 }
-export function createMuralViewer({host,wall,lang='en',zoomIn,zoomOut,fit,status}){
+export function createMuralViewer({host,wall,lang='en',zoomIn,zoomOut,fit,status,storyToggle}){
   let viewer,destroyed=false,removeHotspots=()=>{};const listeners=[];
   const canvas=document.createElement('div');canvas.className='deepzoom-canvas';host.append(canvas);
   const say=(en,zh)=>{if(status)status.textContent=lang==='zh'?zh:en};
@@ -38,7 +38,7 @@ export function createMuralViewer({host,wall,lang='en',zoomIn,zoomOut,fit,status
       image.source.hasTransparency=()=>true;
       // One image, one viewport: let the pyramid load only the visible resolution.
       // No independent, fixed <img> can remain on top while zooming or panning.
-      viewer.viewport.goHome(true);removeHotspots=mountMuralHotspots(viewer,wall,OSD);
+      viewer.viewport.goHome(true);removeHotspots=mountMuralHotspots(viewer,wall,OSD,{lang,toggle:storyToggle});
       function reveal(){if(!destroyed&&image.getFullyLoaded()){
         say('Wheel to zoom · drag to pan','滚轮缩放 · 拖动平移');
       }}
