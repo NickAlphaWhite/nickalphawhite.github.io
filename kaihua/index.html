@@ -100,7 +100,8 @@
 .hall-zoom-tools button{background:transparent;border:0;color:#e7ddc7;padding:9px 12px;font-size:12px}.hall-zoom-tools button:disabled{opacity:.35;cursor:default}
 @media(max-width:680px){.hall-zoom-tools{right:20px;top:215px}.image-zoom-tools{font-size:10px}}
 </style>
-  <link rel="stylesheet" href="./assets/cover.css?v=art2">
+  <link rel="stylesheet" href="./assets/cover.css?v=art3">
+  <link rel="stylesheet" href="./assets/site-shell.css?v=marcellus1">
   <script type="importmap">
     {"imports":{"three":"./assets/vendor/three.module.min.js"}}
   </script>
@@ -170,12 +171,12 @@
     </section>
   </main>
 
-  <div id="overlay" class="overlay" hidden><button class="overlay-backdrop" id="close-backdrop" aria-label="Close panel"></button><section class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-heading"><div class="drawer-top"><span class="section-overline" id="drawer-kicker">KAIHUA / ARCHIVE</span><button id="close-overlay" aria-label="Return to previous view" class="drawer-close"><span id="close-label">← Return to hall</span><span class="close-symbol" aria-hidden="true">×</span></button></div><div class="drawer-scroll" id="drawer-body"></div></section></div>
+  <div id="overlay" class="overlay" hidden><button class="overlay-backdrop" id="close-backdrop" aria-label="Close panel"></button><section class="drawer" role="region" aria-labelledby="drawer-heading"><div class="drawer-top"><span class="section-overline" id="drawer-kicker">KAIHUA / ARCHIVE</span><button id="close-overlay" aria-label="Return to previous view" class="drawer-close"><span id="close-label">← Return to hall</span><span class="close-symbol" aria-hidden="true">×</span></button></div><div class="drawer-scroll" id="drawer-body"></div></section></div>
   <div id="toast" role="status" aria-live="polite"></div>
   <footer class="footline"><span>© 2026 · KAIHUA SPATIAL STUDY</span><span id="footnote">Interpretive prototype · not a measured reconstruction</span></footer>
   <script type="module">
 import * as THREE from 'three';
-import {buildHall} from './assets/hall.js';
+import {buildHall} from './assets/hall.js?v=buddha1';
 import {createLookControls} from './assets/look-controls.js?v=resume2';
 import {createHallZoom} from './assets/zoom-controls.js';
 import {loadMuralCatalog,visiblePixel} from './assets/mural-data.js?v=northwest1';
@@ -303,6 +304,11 @@ const hallZoom=createHallZoom({
  }
 });
 let detailViewer=null,detailWallId=null;
+let buddhaReady=null;
+function ensureBuddha(){
+ if(!buddhaReady)buddhaReady=import('./assets/buddha.js?v=1').then(({loadBuddha})=>loadBuddha({scene,renderer,occluders})).catch(error=>{buddhaReady=null;console.warn('Buddha model unavailable',error);toast(state.lang==='zh'?'佛像模型暂不可用，请重新进入大殿重试。':'The statue could not load. Re-enter the hall to retry.');});
+ return buddhaReady;
+}
 let lockPending=false;
 function releaseMouse(){lookInput.reset();if(document.pointerLockElement===renderer.domElement)document.exitPointerLock?.();}
 function updateMouseHint(){const paused=!matchMedia('(pointer:coarse)').matches&&document.pointerLockElement!==renderer.domElement;document.body.classList.toggle('mouse-paused',paused);const hint=$('mouse-hint');if(hint)hint.hidden=state.mode!=='explore'||Boolean(state.drawer)||state.guide||!paused;}
@@ -320,16 +326,20 @@ setHomeCamera();
 function applyLang(){const t=content[state.lang];document.documentElement.lang=state.lang==='zh'?'zh-CN':'en';$('brand').querySelector('strong').textContent=state.lang==='zh'?'开化寺':'KAIHUA';$('language').textContent=state.lang==='en'?'中文':'EN';['nav-home','nav-explore','nav-atlas','nav-method'].forEach((id,i)=>$(id).textContent=t.nav[i]);$('hero-kicker').textContent=t.kicker;$('hero-heading').innerHTML=t.hero;$('hero-subtitle').textContent=t.sub;$('hero-copy').textContent=t.copy;$('enter-label').textContent=t.enter;$('hero-archive').innerHTML=`${t.archive} <span>↗</span>`;$('hero-caption').textContent=t.caption;$('tour-title').textContent=t.tourTitle;$('tour-subtitle').textContent=t.tourSub;$('controls-text').textContent=t.controls;
 for(const [id,en,zh] of [['hall-zoom-in','Zoom in','放大'],['hall-zoom-out','Zoom out','缩小'],['hall-zoom-reset','Reset zoom','复位缩放']]){$(id).setAttribute('aria-label',state.lang==='zh'?zh:en);$(id).title=state.lang==='zh'?zh:en}
 $('guide-label').textContent=state.guide?(state.guidePaused?t.resume:t.pause):t.guide;$('reset-label').textContent=t.reset;$('exit-label').textContent=t.exit;$('plan-label').textContent=t.plan;$('plan-note').textContent=t.planNote;$('look-hint').textContent=t.look;$('mouse-hint').textContent=state.lang==='en'?'Click the hall to resume mouse look · Esc unlocks':'点击大殿继续鼠标转向 · Esc 释放鼠标';$('footnote').textContent=t.foot;if($('loading-text'))$('loading-text').textContent=t.loading;showPositionInfo();if(!$('overlay').hidden){$('close-label').textContent=state.mode==='explore'?t.returnHall:t.returnIntro;renderDrawer();}}
+function syncNavigation(){
+ const page=state.drawer||state.mode;
+ document.querySelectorAll('.navlink').forEach(button=>{const active=button.dataset.nav===page;button.classList.toggle('active',active);if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');});
+}
 function clearDrawer(){
  const wasOpen=Boolean(state.drawer);
  detailViewer?.destroy();detailViewer=null;detailWallId=null;
  lookInput.reset();
- const el=$('overlay');el.hidden=true;document.querySelectorAll('.navlink').forEach(b=>b.classList.toggle('active',b.dataset.nav===state.mode));state.drawer=null;state.keys.clear();state.touch.clear();
+ const el=$('overlay');el.hidden=true;state.drawer=null;syncNavigation();state.keys.clear();state.touch.clear();
  updateMouseHint();
  if(wasOpen&&state.mode==='explore')renderer.domElement.focus({preventScroll:true});
  // The camera is deliberately not reset: visitors return to exactly where they stood.
 }
-function setMode(mode){releaseMouse();clearDrawer();state.mode=mode;state.keys.clear();state.touch.clear();document.body.classList.toggle('mode-explore',mode==='explore');$('home').hidden=mode==='explore';$('explore-ui').hidden=mode!=='explore';if(mode==='explore'){setEntryCamera();state.guide=false;state.guideT=0;state.guidePaused=false;state.positions.clear();showPositionInfo();if(!matchMedia('(pointer:coarse)').matches)toast(content[state.lang].toastGuide);}else setHomeCamera();document.querySelectorAll('.navlink').forEach(b=>b.classList.toggle('active',b.dataset.nav===mode));updateMouseHint();}
+function setMode(mode){releaseMouse();clearDrawer();state.mode=mode;state.keys.clear();state.touch.clear();document.body.classList.toggle('mode-explore',mode==='explore');$('home').hidden=mode==='explore';$('explore-ui').hidden=mode!=='explore';if(mode==='explore'){ensureBuddha();setEntryCamera();state.guide=false;state.guideT=0;state.guidePaused=false;state.positions.clear();showPositionInfo();if(!matchMedia('(pointer:coarse)').matches)toast(content[state.lang].toastGuide);}else setHomeCamera();syncNavigation();updateMouseHint();}
 function setDrawer(view,wall=state.activeWall){
  $('toast').classList.remove('visible');
  if(state.guide){state.guidePaused=true;$('guide-label').textContent=content[state.lang].resume;}
@@ -339,7 +349,7 @@ function setDrawer(view,wall=state.activeWall){
  $('close-label').textContent=state.mode==='explore'?content[state.lang].returnHall:content[state.lang].returnIntro;
  $('drawer-body').scrollTop=0;
  renderDrawer();updateMouseHint();
- document.querySelectorAll('.navlink').forEach(b=>b.classList.toggle('active',b.dataset.nav===view));
+ syncNavigation();
 }
 function escapeHTML(value){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
 function renderDrawer(){
@@ -520,7 +530,7 @@ async function loadAssets(){
  }catch(error){console.warn('Prepared murals unavailable',error);if(state.drawer==='atlas')$('drawer-body').textContent=state.lang==='zh'?'壁画资源未就绪，请检查本地资源与生成清单。':'Mural assets are unavailable. Check the prepared local catalog.';}
 }
 function init(){
- bind();applyLang();setHomeCamera();animate();const muralReady=loadAssets();
+ bind();applyLang();syncNavigation();setHomeCamera();animate();const muralReady=loadAssets();
  // Complete local material loading before revealing the hall; fallback maps work offline.
  Promise.race([Promise.all([materialsReady,muralReady]),new Promise(resolve=>setTimeout(resolve,5000))]).then(()=>{
   renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;$('loading')?.classList.add('done');setTimeout(()=>$('loading')?.remove(),450);

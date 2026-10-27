@@ -7,7 +7,9 @@
     "prepare:assets": "node scripts/prepare-murals.cjs",
     "build": "node scripts/validate-assets.cjs",
     "test": "node --test tests/*.test.mjs",
-    "test:browser": "node tests/browser.cjs"
+    "test:browser": "node tests/browser.cjs",
+    "test:shell": "node tests/site-shell.cjs",
+    "prepare:buddha": "node scripts/prepare-buddha.cjs"
   },
   "devDependencies": {
     "openseadragon": "6.1.1",
