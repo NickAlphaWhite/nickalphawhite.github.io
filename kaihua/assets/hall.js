@@ -63,8 +63,6 @@ export function buildHall(scene, renderer) {
     for(let x=0;x<w;x+=3){c.strokeStyle='rgba(206,157,127,.08)';c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke()}
   });
   const vermilion=new THREE.MeshStandardMaterial({map:clothMap,color:'#9b766e',roughness:1});
-  const gold=new THREE.MeshStandardMaterial({color:'#a48d53',metalness:.42,roughness:.65});
-  const goldDark=new THREE.MeshStandardMaterial({color:'#6a582f',metalness:.4,roughness:.79});
   // Local CC0 scans provide real wear; saturation is reduced in the material shader,
   // without changing the source files or inventing site-specific historic textures.
   function muted(material,saturation){
@@ -114,9 +112,7 @@ export function buildHall(scene, renderer) {
     }
     const m=new THREE.Mesh(geometries.get(key),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;scene.add(m);if(solid)occluders.push(m);return m;
   }
-  function ellipsoid(x,y,z,rx,ry,rz,mat=gold){
-    const m=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),mat);m.position.set(x,y,z);m.scale.set(rx,ry,rz);m.castShadow=true;m.receiveShadow=true;scene.add(m);occluders.push(m);return m;
-  }
+
   function cylinder(x,y,z,r1,r2,h,mat=wood){
     const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,20),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;scene.add(m);return m;
   }
@@ -124,11 +120,7 @@ export function buildHall(scene, renderer) {
     const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),dir=end.clone().sub(start);
     const m=box(0,0,0,width,dir.length(),depth,mat);m.position.copy(start.add(end).multiplyScalar(.5));m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());return m;
   }
-  function limb(a,b,radius,mat=gold){
-    const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),dir=end.clone().sub(start);
-    const m=cylinder(0,0,0,radius*.85,radius,dir.length(),mat);
-    m.position.copy(start.add(end).multiplyScalar(.5));m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());occluders.push(m);return m;
-  }
+
   // Raised masonry plinth and narrow stone paving, instead of outlined giant tiles.
   // The old plinth and paving BOTH ended at y=0, causing depth-buffer fighting.
   // Keep the plinth top at -.09 and use one upward-facing paving surface at 0.
@@ -243,43 +235,8 @@ export function buildHall(scene, renderer) {
   box(0,.43,-.10,4.54,.86,4.0,brick,true);box(0,.89,-.10,4.65,.12,4.10,stone,true);
   box(0,.967,-.10,4.49,.035,3.98,vermilion);
   obstacles.push({x:0,z:-.10,halfX:2.325,halfZ:2.05});
-  // Lotus pedestal and seated figure. A schematic sculpture with no claim of scan fidelity.
+  // The separately loaded user-supplied GLB includes its own lotus pedestal.
   const z=-.62;
-  box(0,1.10,z,1.9,.28,1.60,goldDark,true);box(0,1.29,z,2.04,.12,1.73,gold,true);
-  for(const row of [0,1])for(let a=0;a<12;a++){
-    const angle=a*Math.PI/6+(row?Math.PI/12:0);
-    const petal=ellipsoid(Math.sin(angle)*.85,1.48+row*.24,z+Math.cos(angle)*.66,.20,.29,.115,row?gold:goldDark);petal.rotation.y=angle;
-  }
-  cylinder(0,1.77,z,.89,.95,.16,gold);
-  ellipsoid(0,1.96,z,.89,.28,.59); // folded legs
-  ellipsoid(-.43,2.04,z+.32,.54,.22,.36).rotation.z=.16;
-  ellipsoid(.43,2.04,z+.32,.54,.22,.36).rotation.z=-.16;
-  // Tapered draped torso, neck, head, ears and ushnisha.
-  const torso=new THREE.Mesh(new THREE.LatheGeometry([new THREE.Vector2(.60,0),new THREE.Vector2(.52,.25),new THREE.Vector2(.39,.72),new THREE.Vector2(.43,.94),new THREE.Vector2(.28,1.03)],32),gold);
-  torso.position.set(0,2.06,z);torso.scale.z=.67;torso.castShadow=true;torso.receiveShadow=true;scene.add(torso);occluders.push(torso);
-  cylinder(0,3.14,z,.15,.17,.24,gold);ellipsoid(0,3.49,z,.285,.38,.255);
-  ellipsoid(0,3.80,z-.025,.23,.20,.21,goldDark);ellipsoid(0,3.96,z-.035,.10,.11,.10);
-  for(const x of [-.29,.29])ellipsoid(x,3.43,z,.067,.19,.075);
-  // Facial relief faces the south entry (+Z).
-  ellipsoid(0,3.47,z+.255,.045,.08,.035);
-  for(const x of [-.11,.11]){const eye=ellipsoid(x,3.54,z+.232,.064,.012,.017,goldDark);eye.rotation.z=x>0?-.12:.12;}
-  ellipsoid(0,3.34,z+.239,.078,.012,.013,goldDark);
-  // Right raised hand, left hand resting in lap, and sloping sleeves.
-  limb([-.39,2.96,z],[-.62,2.67,z+.19],.14);
-  limb([-.62,2.67,z+.19],[-.61,3.09,z+.38],.085);
-  ellipsoid(-.62,2.67,z+.19,.13,.13,.13);
-  ellipsoid(-.61,3.18,z+.38,.12,.20,.055);
-  for(let i=0;i<4;i++)ellipsoid(-.69+i*.048,3.35,z+.38,.023,.10,.027);
-  limb([.38,2.97,z],[.62,2.48,z+.20],.15);
-  limb([.62,2.48,z+.20],[.17,2.29,z+.46],.095);
-  ellipsoid(.62,2.48,z+.20,.14,.14,.14);
-  ellipsoid(.10,2.29,z+.48,.23,.065,.12);
-  // Fine garment folds follow the torso and crossed legs, without a wireframe overlay.
-  for(let i=0;i<7;i++){
-    const y=2.15+i*.105,r=.53-i*.025;
-    const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(-r,y+.2,z+.22),new THREE.Vector3(-r*.35,y,z+.40),new THREE.Vector3(r*.70,y-.04,z+.29)]);
-    const fold=new THREE.Mesh(new THREE.TubeGeometry(curve,20,.009,4,false),goldDark);scene.add(fold);
-  }
   // Carry the coffer from a closed timber frame bearing on the four altar posts.
   // This is a schematic connection, not a reconstruction of historic joinery.
   const supportStart=scene.children.length;

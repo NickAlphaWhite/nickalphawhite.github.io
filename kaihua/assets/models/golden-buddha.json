@@ -1,0 +1,33 @@
+{
+  "sourceName": "Meshy_AI_Golden_Buddha_of_the__1027072003_texture.glb",
+  "sourceSha256": "b519b25485150f5cff2bd0d6a4c61458fb8ffd4d5695bc5af3fb2fda77ad4c92",
+  "sourceBytes": 12420700,
+  "webBytes": 7485944,
+  "triangles": 196618,
+  "textures": [
+    {
+      "image": 0,
+      "sourceSize": [
+        2048,
+        2048
+      ],
+      "bytes": 539126
+    },
+    {
+      "image": 1,
+      "sourceSize": [
+        2048,
+        2048
+      ],
+      "bytes": 1022164
+    },
+    {
+      "image": 2,
+      "sourceSize": [
+        2048,
+        2048
+      ],
+      "bytes": 136668
+    }
+  ]
+}
